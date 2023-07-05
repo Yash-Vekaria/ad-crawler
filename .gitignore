@@ -1,0 +1,10 @@
+# Directories to ignore
+__pycache__/
+tmp/
+output/
+
+
+# Files to ignore
+hb_checker.py
+crawler.py
+*2023.csv
