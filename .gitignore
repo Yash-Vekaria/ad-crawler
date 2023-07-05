@@ -8,3 +8,4 @@ output/
 hb_checker.py
 crawler.py
 *2023.csv
+**/.DS_Store
