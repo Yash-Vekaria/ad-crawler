@@ -16,27 +16,12 @@ class FullPageScreenshotCollector():
 		self.ss_output_path = ss_output_path
 
 
-	def exploreFullPage(self, driver):
-		'''
-		Scroll to bottom and back up to the top for all ads to load and become viewable
-		'''
-		page_height = int(driver.execute_script("return document.body.scrollHeight"))
-		for i in range(1, page_height, 10):
-			driver.execute_script("window.scrollTo(0, {});".format(i))
-			sleep(0.025)
-		sleep(2)
-		driver.execute_script("window.scrollTo(0, 0);")
-		# Wait for new ads to completely load
-		sleep(15)
-		return
-
-
 	def captureFullScreenshot(self, driver, logger):
 		'''
 		Capture a continuously stitched screenshot of the full webpage being currently visited
 		'''
 
-		self.exploreFullPage(driver)
+		# self.exploreFullPage(driver)
 
 		try:
 			total_width = driver.execute_script("return document.body.offsetWidth")

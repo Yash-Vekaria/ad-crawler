@@ -60,6 +60,21 @@ def getChromeOptionsObject():
 	return chrome_options
 
 
+def exploreFullPage(webdriver_):
+	'''
+	Scroll to bottom and back up to the top for all ads to load and become viewable
+	'''
+	page_height = int(webdriver_.execute_script("return document.body.scrollHeight"))
+	for i in range(1, page_height, 10):
+		webdriver_.execute_script("window.scrollTo(0, {});".format(i))
+		sleep(0.025)
+	sleep(2)
+	webdriver_.execute_script("window.scrollTo(0, 0);")
+	# Wait for new ads to completely load
+	sleep(10)
+	return
+
+
 def configureProxy(port, profile_dir):
 	'''
 	Instatiate and start browsermobproxy to collect HAR files and accordingly configure chrome options
@@ -146,6 +161,7 @@ def main(args):
 			pass
 		print("Starting HAR Capture")
 		
+
 		# Visit the current domain
 		website = "http://" + str(hb_domain)
 		try:
@@ -153,32 +169,14 @@ def main(args):
 			driver.get(website)
 		except BaseException as e:
 			logger.write("\n[ERROR] main()::ad-crawler: {}\nException occurred while getting the domain: {} | {}.".format(str(traceback.format_exc()), hb_domain, profile))
-			driver.close()
+			# driver.close()
 			continue
 		# Wait for page to completely load
-		sleep(15)
+		sleep(30)
 		print("Visiting and loading webpage ...")
-		
-		
-		# Take fullpage screenshot of the webpage
-		screenshot_output_path = os.path.join(experimental_path, str(hb_domain)+"_ss.png")
-		ss_object = FullPageScreenshotCollector(profile, hb_domain, hb_rank, screenshot_output_path)
-		status = ss_object.captureFullScreenshot(driver, logger)
-		if status:
-			logger.write("\nFull page screnshot successfully captured.")
-		else:
-			logger.write("\n[ERROR] main()::FullPageScreenshotCollector: {}\nIssue in capturing full page screenshot for {} | {}.".format(str(traceback.format_exc()), hb_domain, profile))
-		# Move to the top and wait for dynamically updated ads to completely load
-		driver.execute_script("window.scrollTo(0, 0);")
-		sleep(5)
-		print("Fullpage screenshot of the webpage captured")
 
-		
-		# Perform bid collection
-		bid_file_path = os.path.join(experimental_path, str(hb_domain)+"_bids.json")
-		bid_object = BidCollector(profile, hb_domain, hb_rank, bid_file_path)
-		bid_object.collectBids(driver, logger)
-		print("Bid data collected")
+
+		exploreFullPage(driver)
 
 		
 		# Read filterlist rules
@@ -194,6 +192,27 @@ def main(args):
 		fdom.write(driver.page_source)
 		fdom.close()
 		print("DOM saved")
+
+
+		# Perform bid collection
+		bid_file_path = os.path.join(experimental_path, str(hb_domain)+"_bids.json")
+		bid_object = BidCollector(profile, hb_domain, hb_rank, bid_file_path)
+		bid_object.collectBids(driver, logger)
+		print("Bid data collected")
+		
+		
+		# Take fullpage screenshot of the webpage
+		screenshot_output_path = os.path.join(experimental_path, str(hb_domain)+"_ss.png")
+		ss_object = FullPageScreenshotCollector(profile, hb_domain, hb_rank, screenshot_output_path)
+		status = ss_object.captureFullScreenshot(driver, logger)
+		if status:
+			logger.write("\nFull page screnshot successfully captured.")
+		else:
+			logger.write("\n[ERROR] main()::FullPageScreenshotCollector: {}\nIssue in capturing full page screenshot for {} | {}.".format(str(traceback.format_exc()), hb_domain, profile))
+		# Move to the top and wait for dynamically updated ads to completely load
+		driver.execute_script("window.scrollTo(0, 0);")
+		sleep(10)
+		print("Fullpage screenshot of the webpage captured")
 
 		
 		# Collect ads on the website
