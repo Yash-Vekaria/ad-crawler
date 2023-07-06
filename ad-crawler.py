@@ -169,7 +169,16 @@ def main(args):
 			driver.get(website)
 		except BaseException as e:
 			logger.write("\n[ERROR] main()::ad-crawler: {}\nException occurred while getting the domain: {} | {}.".format(str(traceback.format_exc()), hb_domain, profile))
-			# driver.close()
+			try:
+				driver.close()
+			except:
+				try:
+					driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+				except BaseException as error:
+					# print("\nAn exception occurred:", traceback.format_exc(), "while initializing the webdriver for domain:", hb_domain)
+					print("\n[ERROR] main()::Webdriver-Intitialization: {}".format(str(traceback.format_exc())))
+					exit()
+				print("\nChromedriver successfully loaded!")
 			continue
 		# Wait for page to completely load
 		sleep(30)
@@ -202,7 +211,7 @@ def main(args):
 		
 		
 		# Take fullpage screenshot of the webpage
-		screenshot_output_path = os.path.join(experimental_path, str(hb_domain)+"_ss.png")
+		screenshot_output_path = os.path.join(experimental_path, str(hb_domain)+"_ss-before.png")
 		ss_object = FullPageScreenshotCollector(profile, hb_domain, hb_rank, screenshot_output_path)
 		status = ss_object.captureFullScreenshot(driver, logger)
 		if status:
@@ -224,6 +233,19 @@ def main(args):
 		ad_object = AdCollector(profile, hb_domain, hb_rank, rules, ad_path, logger)
 		ad_object.collectAds(driver)
 		print("Ad collection complete!")
+
+
+		# Take fullpage screenshot of the webpage
+		screenshot_output_path = os.path.join(experimental_path, str(hb_domain)+"_ss-after.png")
+		ss_object = FullPageScreenshotCollector(profile, hb_domain, hb_rank, screenshot_output_path)
+		status = ss_object.captureFullScreenshot(driver, logger)
+		if status:
+			logger.write("\nFull page screnshot successfully captured.")
+		else:
+			logger.write("\n[ERROR] main()::FullPageScreenshotCollector: {}\nIssue in capturing full page screenshot for {} | {}.".format(str(traceback.format_exc()), hb_domain, profile))
+		# Move to the top and wait for dynamically updated ads to completely load
+		driver.execute_script("window.scrollTo(0, 0);")
+		print("Fullpage screenshot of the webpage captured")
 
 
 		# Complete HAR Collection and save .har file
