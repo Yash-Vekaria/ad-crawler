@@ -60,7 +60,7 @@ def getChromeOptionsObject():
 	return chrome_options
 
 
-def configureProxy(port, logger):
+def configureProxy(port, profile_dir):
 	'''
 	Instatiate and start browsermobproxy to collect HAR files and accordingly configure chrome options
 	Killing open ports:
@@ -74,10 +74,20 @@ def configureProxy(port, logger):
 		proxy = server.create_proxy()
 	except BaseException as error:
 		print("\nAn exception occurred:", traceback.format_exc(), "in configureProxy()")
-		logger.write("\n[ERROR] configureProxy():\n" + str(traceback.format_exc()))
-		return None, None
+		# logger.write("\n[ERROR] configureProxy():\n" + str(traceback.format_exc()))
+		return None, None, None
+
+	# Instantiate chromedriver options
+	chrome_options = getChromeOptionsObject()
 	
-	return server, proxy
+	# Associate proxy-related settings to the chromedriver
+	chrome_options.add_argument("--proxy-server={}".format(proxy.proxy))
+	chrome_options.add_argument("--ignore-ssl-errors=yes")
+	chrome_options.add_argument("--use-littleproxy false")
+	chrome_options.add_argument("--proxy=127.0.0.1:%s" % port)
+	chrome_options.add_argument("--user-data-dir=%s" % profile_dir)
+	
+	return server, proxy, chrome_options
 
 
 def main(args):
@@ -93,16 +103,12 @@ def main(args):
 	# hb_dict stores mapping of hb_domain to hb_rank (tranco_rank)
 	hb_dict = readHeaderBiddingSites()
 
-
-	# Instantiate chromedriver options
-	chrome_options = getChromeOptionsObject()
-	
-	# Associate proxy-related settings to the chromedriver
-	chrome_options.add_argument("--proxy-server=127.0.0.1")
-	chrome_options.add_argument("--ignore-ssl-errors=yes")
-	chrome_options.add_argument("--use-littleproxy false")
-	chrome_options.add_argument("--proxy=127.0.0.1:%s" % proxy_port)
-	chrome_options.add_argument("--user-data-dir=%s" % chrome_profile_dir)
+	# Start the proxy server to facilitate capturing HAR file
+	server, proxy, chrome_options = configureProxy(proxy_port, chrome_profile_dir)
+	if server is None:
+		print("Server issue while its initialization.")
+		exit()
+	print("\nBrowsermob-proxy successfully configured for {} | {}!".format(hb_domain, profile))
 
 
 	# Start the chromedriver instance
@@ -123,17 +129,11 @@ def main(args):
 		if not(os.path.exists(experimental_path)):
 			os.makedirs(experimental_path)
 
+		
 		# Log issues and crawl progress in this file
 		logger = open(os.path.join(experimental_path, str(hb_domain)+"_logs.txt"), "w")
 		ct = datetime.datetime.now()
 		logger.write("\n\nCrawl Start Time: {} [TS:{}] [{}]".format(ct, ct.timestamp(), hb_domain))
-
-
-		# Start the proxy server to facilitate capturing HAR file
-		server, proxy = configureProxy(proxy_port, logger)
-		if server is None:
-			continue
-		logger.write("\nBrowsermob-proxy successfully configured for {} | {}!".format(hb_domain, profile))
 
 
 		# Start capturing HAR
@@ -216,8 +216,9 @@ def main(args):
 		print("Total time to crawl domain: {} is {}".format(hb_domain, total_time))
 		logger.write("\nTotal time to crawl domain: {} is {}\n".format(hb_domain, total_time))
 
-		server.stop()
 		# End
+
+	server.stop()
 
 
 
