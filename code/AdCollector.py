@@ -45,19 +45,21 @@ class AdCollector():
 		EASYLIST_DIR = "./data/EasyList"
 		filepath = os.path.join(EASYLIST_DIR, "easylist.txt")
 		try:
-			with open(fname) as f:
+			with open(filepath) as f:
 				rules = f.readlines()
 				rules = [x.strip() for x in rules]
 			f.close()
 		except:
-			logger.write("\n[ERROR] setupEasyList()::AdCollector: {}\nException occured while reading filter_rules for domain: {} | {}".format(str(traceback.format_exc()), self.site, self.profile))
+			self.logger.write("\n[ERROR] setupEasyList()::AdCollector: {}\nException occured while reading filter_rules for domain: {} | {}".format(str(traceback.format_exc()), self.site, self.profile))
 			rules = []
 		
 		rule_dict = {}
-		rule_dict['image'] = AdblockRules(rules, use_re2=False, max_mem=1024*1024*1024, supported_options=['image', 'domain', 'subdocument'], skip_unsupported_rules=False)
-		rule_dict['image_third'] = AdblockRules(rules, use_re2=False, max_mem=1024*1024*1024, supported_options=['third-party', 'image', 'domain', 'subdocument'], skip_unsupported_rules=False)
 		rule_dict['script'] = AdblockRules(rules, use_re2=False, max_mem=1024*1024*1024, supported_options=['script', 'domain', 'subdocument'], skip_unsupported_rules=False)
 		rule_dict['script_third'] = AdblockRules(rules, use_re2=False, max_mem=1024*1024*1024, supported_options=['third-party', 'script', 'domain', 'subdocument'], skip_unsupported_rules=False)
+		rule_dict['image'] = AdblockRules(rules, use_re2=False, max_mem=1024*1024*1024, supported_options=['image', 'domain', 'subdocument'], skip_unsupported_rules=False)
+		rule_dict['image_third'] = AdblockRules(rules, use_re2=False, max_mem=1024*1024*1024, supported_options=['third-party', 'image', 'domain', 'subdocument'], skip_unsupported_rules=False)
+		rule_dict['css'] = AdblockRules(rules, use_re2=False, max_mem=1024*1024*1024, supported_options=['stylesheet', 'domain', 'subdocument'], skip_unsupported_rules=False)
+		rule_dict['css_third'] = AdblockRules(rules, use_re2=False, max_mem=1024*1024*1024, supported_options=['third-party', 'stylesheet', 'domain', 'subdocument'], skip_unsupported_rules=False)
 		rule_dict['xmlhttp'] = AdblockRules(rules, use_re2=False, max_mem=1024*1024*1024, supported_options=['xmlhttprequest', 'domain', 'subdocument'], skip_unsupported_rules=False)
 		rule_dict['xmlhttp_third'] = AdblockRules(rules, use_re2=False, max_mem=1024*1024*1024, supported_options=['third-party', 'xmlhttprequest', 'domain', 'subdocument'], skip_unsupported_rules=False)
 		rule_dict['third'] = AdblockRules(rules, use_re2=False, max_mem=1024*1024*1024, supported_options=['third-party', 'domain', 'subdocument'], skip_unsupported_rules=False)
@@ -65,7 +67,8 @@ class AdCollector():
 		return rule_dict
 
 
-	def matchURL(self, domain_top_level, current_domain, current_url, resource_type, rules_dict):
+	def matchURL(self, domain_top_level, current_domain, current_url, resource_type):
+		rules_dict = self.easylist_rules
 		try:
 			if domain_top_level == current_domain:
 				third_party_check = False
@@ -74,7 +77,7 @@ class AdCollector():
 			if resource_type == 'sub_frame':
 				subdocument_check = True
 			else:
-				subdocument_check = True
+				subdocument_check = False
 			if resource_type == 'script':
 				if third_party_check:
 					rules = rules_dict['script_third']
@@ -89,6 +92,13 @@ class AdCollector():
 				else:
 					rules = rules_dict['image']
 					options = {'image': True, 'domain': domain_top_level, 'subdocument': subdocument_check}
+			elif resource_type == 'stylesheet':
+				if third_party_check:
+					rules = rules_dict['css_third']
+					options = {'third-party': True, 'stylesheet': True, 'domain': domain_top_level, 'subdocument': subdocument_check}
+				else:
+					rules = rules_dict['css']
+					options = {'stylesheet': True, 'domain': domain_top_level, 'subdocument': subdocument_check}
 			elif resource_type == 'xmlhttprequest':
 				if third_party_check:
 					rules = rules_dict['xmlhttp_third']
@@ -119,13 +129,13 @@ class AdCollector():
 			return self.ad_url_classifocation[script_url]
 		top_domain = self.site
 		data_label = False
-		for resource_type in ["sub_frame", "image", "script", "xmlhttprequest"]:
+		for resource_type in ["sub_frame", "image", "script"]:
 			try:
 				fld = get_fld(script_url)
 			except Exception as e:
 				self.ad_url_classifocation[script_url] = False
 				return False
-			list_label = self.matchURL(top_domain, fld, script_url, resource_type, self.easylist_rules)
+			list_label = self.matchURL(top_domain, fld, script_url, resource_type)
 			data_label = data_label | list_label
 			if data_label == True:
 				break
@@ -137,11 +147,11 @@ class AdCollector():
 	def checkIfAdAttributes(self, src_attributes, href_attributes):
 		flag = False
 		for href_url in href_attributes:
-			if self.labelData(href_url, easylist_rules):
+			if self.labelData(href_url):
 				flag = True
 				return True
 		for src_url in src_attributes:
-			if self.labelData(src_url, easylist_rules):
+			if self.labelData(src_url):
 				flag = True
 				return True
 		return False
@@ -211,6 +221,7 @@ class AdCollector():
 					list_href.append(tag['href'])
 				elif element_type == "CSS":
 					list_href.append(tag['href'])
+		driver.switch_to.default_content()
 
 		if element_type == "IFRAME":
 			return list_src, list_href
@@ -226,21 +237,10 @@ class AdCollector():
 
 
 	def collectAds(self, webdriver):
-		'''
-		# Scroll to bottom and back up to the top for all ads to load and become viewable
-		page_height = int(webdriver.execute_script("return document.body.scrollHeight"))
-		for i in range(1, page_height, 10):
-			webdriver.execute_script("window.scrollTo(0, {});".format(i))
-			sleep(0.025)
-		sleep(2)
-		webdriver.execute_script("window.scrollTo(0, 0);")
-		sleep(1)
-
 		observed_elements = set()
 		iframe_screenshot_logs_src, iframe_screenshot_logs_href = [], []
-		css_elem_match_logs_src, css_elem_match_logs_href = [], []
-		'''
-		"""
+		css_elem_match_logs_src, css_elem_match_logs_href = [], []	
+		
 		matching_logic = '''
 		{
 			let matches = document.querySelectorAll(selector);
@@ -279,12 +279,14 @@ class AdCollector():
 				
 				if href_attributes is not None and href_attributes.strip() != "":
 					self.storeAdResponse(href_attributes.split('||')[0], os.path.join(self.ads_output_path, str(idx) + '_css_response.pickle'))
+				sleep(0.5)
 
 			except Exception as exc:
 				self.logger.write("\n[ERROR] collectAds()::AdCollector: {}\nException occured in CSS ad collection for domain: {} | {}".format(str(traceback.format_exc()), self.site, self.profile))
 				# print('Exception while matching CSS', str(exc))
 				pass
-		"""
+		self.logger.write("\nCSS ads collected for domain: {} | {}".format(self.site, self.profile))
+		
 
 		# ################# IFRAME MATCHING #################
 		iframe_elements = webdriver.find_elements(By.TAG_NAME, 'iframe')
@@ -293,24 +295,31 @@ class AdCollector():
 				if iframe in observed_elements:
 					continue
 				observed_elements.add(iframe)
-				print("Z")
+
+				ad_ss_path = os.path.join(self.ads_output_path, str(idx) + '_iframe.png')
+				self.captureScreenshot(iframe, ad_ss_path)
+				
 				print(iframe)
 				src_attributes, href_attributes = self.getMatchedElementAttributes(iframe, "IFRAME", webdriver)
 				print(idx, src_attributes, href_attributes)
-				print(iframe)
+				# print(iframe)
 				# print("Y")
 				# ad_flag = self.checkIfAdAttributes(src_attributes, href_attributes)
 				# print("A")
-				# if not(ad_flag):
+				if len(src_attributes) == 0 and len(href_attributes) == 0:
+					print("Removing file: iframe-{}".format(idx))
+					os.remove(ad_ss_path)
 				# 	print("B")
-				self.captureScreenshot(iframe, os.path.join(self.ads_output_path, str(idx) + '_iframe.png'))
+				
+
+				## self.captureScreenshot(iframe, os.path.join(self.ads_output_path, str(idx) + '_iframe.png'))
 				# print("C")
 				# iframe_screenshot_logs_src.append(str(idx) + ',' + str("||".join(src_attributes)))
 				# iframe_screenshot_logs_href.append(str(idx) + ',' + str("||".join(href_attributes)))
 				# if href_attributes is not None and len(href_attributes) != 0:
 				# 	print("D")
 				# 	self.storeAdResponse(href_attributes[0], os.path.join(self.ads_output_path, str(idx) + '_iframe_response.pickle'))
-				print("E")
+				# print("E")
 				# nested_src_attributes, nested_href_attributes = self.checkNestedAdIframes(iframe, webdriver, str(idx), observed_elements)
 				# print("F")
 				# iframe_screenshot_logs_src.append(str(idx) + ',' + str("||".join(nested_src_attributes)))
@@ -320,15 +329,18 @@ class AdCollector():
 				# 	self.storeAdResponse(nested_href_attributes[0], os.path.join(self.ads_output_path, str(idx) + '_nested_iframe_response.pickle'))
 
 			except Exception as exc:
+				# print("PRINTING:", str(exc))
+				if ("Cannot take screenshot with 0 width" in str(exc)) or ("Cannot take screenshot with 0 height" in str(exc)):
+					continue
 				print("2", str(exc))
 				print(traceback.format_exc())
 				self.logger.write("\n[ERROR] collectAds()::AdCollector: {}\nException occured in IFRAME ad collection for domain: {} | {}".format(str(traceback.format_exc()), self.site, self.profile))
 				# print('Excpetion while taking iframe screenshot', ex)
 				pass
 
-		print("Succesfully captured " + str(len(css_elem_match_logs_src))  + " CSS-based element screenshots out of " + str(len(matching_css)))
-		print(" " + str(len(iframe_screenshot_logs_src))  + " iframe-based screenshots out of " + 
-		self.logger.write("\nSuccesfully captured {} CSS-based element screenshots out of {} for domain: {} | {}".format(str(len(css_elem_match_logs_src)), str(len(matching_css))), self.site, self.profile))
+		print("Succesfully captured " + str(len(css_elem_match_logs_src)) + " CSS-based element screenshots out of " + str(len(matching_css)))
+		print("Succesfully captured " + str(len(iframe_screenshot_logs_src)) + " iframe-based screenshots out of " + str(len(matching_css)))
+		self.logger.write("\nSuccesfully captured {} CSS-based element screenshots out of {} for domain: {} | {}".format(str(len(css_elem_match_logs_src)), str(len(matching_css)), self.site, self.profile))
 		self.logger.write("\nSuccesfully captured {} iframe-based screenshots out of {} for domain: {} | {}".format(str(len(iframe_screenshot_logs_src)), str(len(iframe_elements)), self.site, self.profile))
 		# exit()
 		# self.write_content(os.path.join(self.ads_output_path,'iframe_screenshot_logs_src.csv'), iframe_screenshot_logs_src)

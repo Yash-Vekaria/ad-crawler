@@ -91,7 +91,7 @@ class BidCollector():
 			if len(bids) > 0:
 				print(self.tranco_rank, self.site, "True")
 				self.bid_output_filepath = str(self.bid_output_filepath).replace("-bids", "-{}-bids".format(method))
-				self.saveBids(bids)
+				self.saveBids(bids, logger)
 				logger.write("\nNORMAL Bids extracted for domain: {}".format(self.site, self.profile))
 			else:
 				print(self.tranco_rank, self.site, "False")
