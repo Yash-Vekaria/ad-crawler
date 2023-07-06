@@ -89,12 +89,13 @@ class BidCollector():
 				method = "FORCED" # These are the FORCED Bids
 				logger.write("\nFORCED Bids extracted for domain: {}".format(self.site, self.profile))
 			if len(bids) > 0:
-				print(self.tranco_rank, self.site, "True")
+				# print(self.tranco_rank, self.site, "True")
 				self.bid_output_filepath = str(self.bid_output_filepath).replace("-bids", "-{}-bids".format(method))
 				self.saveBids(bids, logger)
 				logger.write("\nNORMAL Bids extracted for domain: {}".format(self.site, self.profile))
 			else:
-				print(self.tranco_rank, self.site, "False")
+				# print(self.tranco_rank, self.site, "False")
+				pass
 		except Exception as e:
 			logger.write("\n[ERROR] collectBids()::BidCollector: {}\nException occured in bid collection for domain: {} | {}".format(str(traceback.format_exc()), self.site, self.profile))
 			# print('EXCEPTION occured in bid collection:', str(e))

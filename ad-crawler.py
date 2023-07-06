@@ -108,7 +108,7 @@ def main(args):
 	if server is None:
 		print("Server issue while its initialization.")
 		exit()
-	print("\nBrowsermob-proxy successfully configured for {} | {}!".format(hb_domain, profile))
+	print("\nBrowsermob-proxy successfully configured for profile: {}!".format(profile))
 
 
 	# Start the chromedriver instance
@@ -123,7 +123,7 @@ def main(args):
 
 	for idx, (hb_domain, hb_rank) in enumerate(hb_dict.items()):
 		start_time = time.time()
-		print(idx, hb_domain, hb_rank)
+		print("\n\nStarting to crawl:", idx, hb_domain, hb_rank)
 
 		experimental_path = os.path.join(ROOT_DIRECTORY, "output", profile, hb_domain)
 		if not(os.path.exists(experimental_path)):
@@ -134,6 +134,7 @@ def main(args):
 		logger = open(os.path.join(experimental_path, str(hb_domain)+"_logs.txt"), "w")
 		ct = datetime.datetime.now()
 		logger.write("\n\nCrawl Start Time: {} [TS:{}] [{}]".format(ct, ct.timestamp(), hb_domain))
+		print("Error logging started ...")
 
 
 		# Start capturing HAR
@@ -143,21 +144,22 @@ def main(args):
 		except BaseException as error:
 			logger.write("\n[ERROR] main()::HarCaptureStart: {}\n for domain: {} | {}".format(str(traceback.format_exc()), hb_domain, profile))
 			pass
-
+		print("Starting HAR Capture")
 		
 		# Visit the current domain
 		website = "http://" + str(hb_domain)
 		try:
+			print("Website:", website)
 			driver.get(website)
 		except BaseException as e:
 			logger.write("\n[ERROR] main()::ad-crawler: {}\nException occurred while getting the domain: {} | {}.".format(str(traceback.format_exc()), hb_domain, profile))
-			server.stop()
 			driver.close()
 			continue
 		# Wait for page to completely load
 		sleep(15)
+		print("Visiting and loading webpage ...")
 		
-		'''
+		
 		# Take fullpage screenshot of the webpage
 		screenshot_output_path = os.path.join(experimental_path, str(hb_domain)+"_ss.png")
 		ss_object = FullPageScreenshotCollector(profile, hb_domain, hb_rank, screenshot_output_path)
@@ -169,13 +171,15 @@ def main(args):
 		# Move to the top and wait for dynamically updated ads to completely load
 		driver.execute_script("window.scrollTo(0, 0);")
 		sleep(5)
+		print("Fullpage screenshot of the webpage captured")
 
 		
 		# Perform bid collection
 		bid_file_path = os.path.join(experimental_path, str(hb_domain)+"_bids.json")
 		bid_object = BidCollector(profile, hb_domain, hb_rank, bid_file_path)
 		bid_object.collectBids(driver, logger)
-		'''
+		print("Bid data collected")
+
 		
 		# Read filterlist rules
 		f = open(os.path.join(ROOT_DIRECTORY, "data", "EasyList", "easylist.txt"), "r")
@@ -189,15 +193,18 @@ def main(args):
 		fdom = codecs.open(dom_filepath, "w", "utf−8")
 		fdom.write(driver.page_source)
 		fdom.close()
+		print("DOM saved")
 
 		
 		# Collect ads on the website
+		print("Starting to collect ads ...")
 		ad_path = os.path.join(experimental_path, "ads")
 		if not(os.path.exists(ad_path)):
 			os.makedirs(ad_path)
 
 		ad_object = AdCollector(profile, hb_domain, hb_rank, rules, ad_path, logger)
 		ad_object.collectAds(driver)
+		print("Ad collection complete!")
 
 
 		# Complete HAR Collection and save .har file
@@ -205,10 +212,11 @@ def main(args):
 			with open(har_filepath, 'w') as fhar:
 				json.dump(proxy.har, fhar, indent=4)
 			fhar.close()
-			logger.write("\nHAR dump saved for domain: {} | {}".format(str(traceback.format_exc()), self.site, self.profile))
+			logger.write("\nHAR dump saved for domain: {} | {}".format(hb_domain, profile))
 		except BaseException as error:
 			logger.write("\n[ERROR] main()::HarWriter: {}\nException occured while dumping the HAR for domain: {} | {}".format(str(traceback.format_exc()), hb_domain, profile))
 			pass
+		print("Network traffic saved")
 
 
 		end_time = time.time()
@@ -219,6 +227,7 @@ def main(args):
 		# End
 
 	server.stop()
+	driver.quit()
 
 
 
