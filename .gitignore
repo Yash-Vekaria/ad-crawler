@@ -5,7 +5,6 @@ output/
 
 
 # Files to ignore
-environment.yml
 *checker.py
 crawler.py
 *2023.csv
