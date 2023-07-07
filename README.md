@@ -4,16 +4,19 @@ A repository to crawl the bids, advertisers, and ads on websites.
 
 ### Steps to setup Crawler
 
-1. Clone the repository
 
-2. Install conda for your system
+1. Update Google Chrome to the latest version
 
-3. Create conda environment and install all the required dependencies in the environment using the .yml file:
+2. Clone the repository
+
+3. Install conda for your system
+
+4. Create conda environment and install all the required dependencies in the environment using the .yml file:<br>
    `
    conda env create -f environment.yml
    `
    
-5. Run the crawler by provinding relevent arguments:
+5. Run the crawler by provinding relevent arguments:<br>
    `
    python3 ad-crawler.py --profile="<profile-name>" --proxyport=<proxy-port> --chromedatadir="<user-profile-dir>"
    `
