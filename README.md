@@ -9,7 +9,8 @@ A repository to crawl the bids, advertisers, and ads on websites.
 
 2. Clone the repository
 
-3. Install conda for your system
+3. Install conda (miniconda) for your system from:<br>
+   `[https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html](https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html)`
 
 4. Create conda environment and install all the required dependencies in the environment using the .yml file:<br>
    `
