@@ -7,6 +7,7 @@ from selenium import webdriver
 import selenium
 
 # from pyvirtualdisplay import Display
+import undetected_chromedriver as uc
 from browsermobproxy import Server
 from time import sleep
 import pandas as pd
@@ -50,13 +51,13 @@ def getChromeOptionsObject():
 	# chrome_options.add_argument("--headless")
 	chrome_options.add_argument("--no-sandbox")
 	chrome_options.add_argument("--disable-dev-shm-usage")
-	chrome_options.add_argument("--disable-notifications")
-	chrome_options.add_argument("--disable-popup-blocking")
-	chrome_options.add_argument("--ignore-ssl-errors=yes")
-	chrome_options.add_argument("--ignore-certificate-errors")
-	# chrome_options.add_argument("--window-size=1920,1080") #1400,600
 	chrome_options.add_argument("--window-size=1536,864")
 	chrome_options.add_argument("--start-maximized")
+	# chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+	# chrome_options.add_experimental_option('useAutomationExtension', False)
+	chrome_options.add_argument("--disable-notifications")
+	chrome_options.add_argument("--disable-popup-blocking")
+	chrome_options.add_argument("--ignore-certificate-errors")
 	return chrome_options
 
 
@@ -64,12 +65,18 @@ def exploreFullPage(webdriver_):
 	'''
 	Scroll to bottom and back up to the top for all ads to load and become viewable
 	'''
-	page_height = int(webdriver_.execute_script("return document.body.scrollHeight"))
-	for i in range(1, page_height, 10):
-		webdriver_.execute_script("window.scrollTo(0, {});".format(i))
-		sleep(0.025)
-	sleep(2)
-	webdriver_.execute_script("window.scrollTo(0, 0);")
+	try:
+		page_height = int(webdriver_.execute_script("return document.body.scrollHeight"))
+		for i in range(1, page_height, 10):
+			try:
+				webdriver_.execute_script("window.scrollTo(0, {});".format(i))
+				sleep(0.025)
+			except:
+				continue
+		sleep(2)
+		webdriver_.execute_script("window.scrollTo(0, 0);")
+	except:
+		pass
 	# Wait for new ads to completely load
 	sleep(10)
 	return
@@ -118,25 +125,9 @@ def main(args):
 	# hb_dict stores mapping of hb_domain to hb_rank (tranco_rank)
 	hb_dict = readHeaderBiddingSites()
 
-	# Start the proxy server to facilitate capturing HAR file
-	server, proxy, chrome_options = configureProxy(proxy_port, chrome_profile_dir)
-	if server is None:
-		print("Server issue while its initialization.")
-		exit()
-	print("\nBrowsermob-proxy successfully configured for profile: {}!".format(profile))
-
-
-	# Start the chromedriver instance
-	try:
-		driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
-	except BaseException as error:
-		# print("\nAn exception occurred:", traceback.format_exc(), "while initializing the webdriver for domain:", hb_domain)
-		print("\n[ERROR] main()::Webdriver-Intitialization: {}".format(str(traceback.format_exc())))
-		exit()
-	print("\nChromedriver successfully loaded!")
-
 
 	for idx, (hb_domain, hb_rank) in enumerate(hb_dict.items()):
+		
 		start_time = time.time()
 		print("\n\nStarting to crawl:", idx, hb_domain, hb_rank)
 
@@ -144,12 +135,34 @@ def main(args):
 		if not(os.path.exists(experimental_path)):
 			os.makedirs(experimental_path)
 
-		
+
 		# Log issues and crawl progress in this file
 		logger = open(os.path.join(experimental_path, str(hb_domain)+"_logs.txt"), "w")
 		ct = datetime.datetime.now()
 		logger.write("\n\nCrawl Start Time: {} [TS:{}] [{}]".format(ct, ct.timestamp(), hb_domain))
 		print("Error logging started ...")
+
+
+		# Start the proxy server to facilitate capturing HAR file
+		server, proxy, chrome_options = configureProxy(proxy_port, chrome_profile_dir)
+		if server is None:
+			logger.write("Server issue while its initialization.")
+			continue
+		logger.write("\nBrowsermob-proxy successfully configured for domain: {} | {}!".format(hb_domain, profile))
+		print("\nBrowsermob-proxy successfully configured for domain: {} | {}!!".format(hb_domain, profile))
+
+
+		# Start the chromedriver instance
+		try:
+			# driver = uc.Chrome(service=Service(ChromeDriverManager().install()), version_main=114, options=chrome_options) #executable_path=‘chromedriver’
+			driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+		except BaseException as error:
+			# print("\nAn exception occurred:", traceback.format_exc(), "while initializing the webdriver for domain:", hb_domain)
+			server.stop()
+			logger.write("\n[ERROR] main()::Webdriver-Intitialization: {} for domain: {} | {}".format(str(traceback.format_exc()), hb_domain, profile))
+			continue
+		logger.write("\nChromedriver successfully loaded!")
+		print("\nChromedriver successfully loaded!")
 
 
 		# Start capturing HAR
@@ -160,6 +173,18 @@ def main(args):
 			logger.write("\n[ERROR] main()::HarCaptureStart: {}\n for domain: {} | {}".format(str(traceback.format_exc()), hb_domain, profile))
 			pass
 		print("Starting HAR Capture")
+
+
+		# Avoid automation/bot detection
+		'''
+		try:
+			if idx%2 == 0:
+				driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+				# driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.198 Safari/537.36'})
+				# print(driver.execute_script("return navigator.userAgent;"))
+		except:
+			pass
+		'''
 		
 
 		# Visit the current domain
@@ -170,15 +195,13 @@ def main(args):
 		except BaseException as e:
 			logger.write("\n[ERROR] main()::ad-crawler: {}\nException occurred while getting the domain: {} | {}.".format(str(traceback.format_exc()), hb_domain, profile))
 			try:
-				driver.close()
+				driver.quit()
+				server.stop()
 			except:
-				try:
-					driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
-				except BaseException as error:
-					# print("\nAn exception occurred:", traceback.format_exc(), "while initializing the webdriver for domain:", hb_domain)
-					print("\n[ERROR] main()::Webdriver-Intitialization: {}".format(str(traceback.format_exc())))
-					exit()
-				print("\nChromedriver successfully loaded!")
+				print("\n[ERROR] main()::Webdriver-Intitialization: {}".format(str(traceback.format_exc())))
+				logger.write("\n[ERROR] main()::Webdriver-Intitialization: {} for domain: {} | {}".format(str(traceback.format_exc()), hb_domain, profile))
+				continue
+			print("\nChromedriver successfully loaded!")
 			continue
 		# Wait for page to completely load
 		sleep(30)
@@ -265,10 +288,11 @@ def main(args):
 		print("Total time to crawl domain: {} is {}".format(hb_domain, total_time))
 		logger.write("\nTotal time to crawl domain: {} is {}\n".format(hb_domain, total_time))
 
-		# End
 
-	server.stop()
-	driver.quit()
+		server.stop()
+		driver.quit()
+
+		# End
 
 
 

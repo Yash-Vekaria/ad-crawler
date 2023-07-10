@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 from tld import get_fld
 from time import sleep
 import traceback
+import requests
 import json
 import time
 import os
