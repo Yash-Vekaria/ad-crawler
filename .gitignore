@@ -10,3 +10,6 @@ crawler.py
 *2023.csv
 **/.DS_Store
 *.log
+
+# Ignored website
+# 1684,vnexpress.net,True
