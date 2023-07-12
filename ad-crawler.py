@@ -124,7 +124,8 @@ def main(args):
 	# Reading Top 105 Header Bidding supported websites
 	# hb_dict stores mapping of hb_domain to hb_rank (tranco_rank)
 	hb_dict = readHeaderBiddingSites()
-
+	print(len(hb_dict.items()))
+	exit()
 
 	for idx, (hb_domain, hb_rank) in enumerate(hb_dict.items()):
 		
