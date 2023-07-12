@@ -127,12 +127,6 @@ def main(args):
 
 
 	for idx, (hb_domain, hb_rank) in enumerate(hb_dict.items()):
-
-		if idx == 88:
-			print(hb_domain)
-			exit()
-		else:
-			continue
 		
 		start_time = time.time()
 		print("\n\nStarting to crawl:", idx, hb_domain, hb_rank)
