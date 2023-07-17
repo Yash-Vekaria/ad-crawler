@@ -14,6 +14,7 @@ import pandas as pd
 import traceback
 import argparse
 import datetime
+import zipfile
 import codecs
 import time
 import sys
@@ -58,7 +59,70 @@ def getChromeOptionsObject():
 	chrome_options.add_argument("--disable-notifications")
 	chrome_options.add_argument("--disable-popup-blocking")
 	chrome_options.add_argument("--ignore-certificate-errors")
+	extension_dir = os.path.join(os.getcwd(), "consent-extension", "Consent-O-Matic", "Extension")
+	chrome_options.add_argument('--load-extension={}'.format(extension_dir))
 	return chrome_options
+
+
+def managePopups(curr_domain, webdriver_):
+
+	try:
+		if "forbes.com" in curr_domain:
+			webdriver_.find_element(By.XPATH, '//button[@alt="Scroll Down"]').click()
+			sleep(2)
+		elif "guardian.co" in curr_domain:
+			webdriver_.find_element(By.XPATH, '//button[@data-link-name="choice-cards-buttons-banner-blue : close"]').click()
+			sleep(2)
+		elif "chron.com" in curr_domain:
+			webdriver_.find_element(By.XPATH, '//a[@class="bc-close-button"]').click()
+			sleep(2)
+		elif "dailymail.co.uk" in curr_domain:
+			webdriver_.find_element(By.XPATH, '//div[@id="closeButton"]').click()
+			sleep(2)
+		elif "goo.ne.jp" in curr_domain:
+			webdriver_.find_element(By.XPATH, '//button[@class="webpush-title-close"]').click()
+			sleep(2)
+		elif "latimes.com" in curr_domain:
+			ele = webdriver_.find_element(By.XPATH, '//modality-custom-element[@name="metering-bottompanel"]')
+			shadow_ele = ele.find_element(By.CSS_SELECTOR, '#shadow-root')
+			shadow_ele.find_element(By.XPATH, '//a[@class="met-flyout-close"]').click()
+			driver.switch_to.default_content()
+			sleep(2)
+		elif "marketwatch.com" in curr_domain:
+			webdriver_.find_element(By.XPATH, '//button[@class="close-btn"]').click()
+			sleep(2)
+		elif "nydailynews.com" in curr_domain:
+			webdriver_.find_element(By.XPATH, '//button[@id="onesignal-slidedown-cancel-button"]').click()
+			sleep(2)
+		elif "sfgate.com" in curr_domain:
+			webdriver_.find_element(By.XPATH, '//a[@class="fancybox-item fancybox-close"]').click()
+			sleep(2)
+		elif "slickdeals.net" in curr_domain:
+			webdriver_.find_element(By.XPATH, '//a[@class="sd-emailOnlyRegistrationWithLogin_laterLink"]').click()
+			sleep(2)
+		elif "wunderground.com" in curr_domain:
+			webdriver_.find_element(By.XPATH, '//button/i[@class="material-icons"]').click()
+			sleep(2)
+		elif "weather.com" in curr_domain:
+			click_svg_close_js = '''
+			const closeIcon = document.querySelector('section#privacy-data-notice svg');
+			closeIcon.dispatchEvent(new MouseEvent('click'));
+			'''
+			webdriver_.execute_script(click_svg_close_js)
+			sleep(2)
+	except BaseException as e:
+		pass
+
+	try:
+		if "sfgate.com" in curr_domain:
+			webdriver_.find_element(By.XPATH, '//div[@class="exp-ui__sticky__close-btn"]').click()
+			sleep(2)
+		elif "slickdeals.net" in curr_domain:
+			webdriver_.find_element(By.XPATH, '//button[@data-role="close"]').click()
+			sleep(2)
+	except BaseException as e:
+		pass
+	return
 
 
 def exploreFullPage(webdriver_):
@@ -121,7 +185,7 @@ def main(args):
 	chrome_profile_dir = args.chromedatadir.replace("Default", profile)
 	
 
-	# Reading Top 105 Header Bidding supported websites
+	# Reading Top 104 Header Bidding supported websites
 	# hb_dict stores mapping of hb_domain to hb_rank (tranco_rank)
 	hb_dict = readHeaderBiddingSites()
 
@@ -174,18 +238,6 @@ def main(args):
 		print("Starting HAR Capture")
 
 
-		# Avoid automation/bot detection
-		'''
-		try:
-			if idx%2 == 0:
-				driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-				# driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.198 Safari/537.36'})
-				# print(driver.execute_script("return navigator.userAgent;"))
-		except:
-			pass
-		'''
-		
-
 		# Visit the current domain
 		website = "http://" + str(hb_domain)
 		try:
@@ -207,7 +259,13 @@ def main(args):
 		print("Visiting and loading webpage ...")
 
 
+		managePopups(hb_domain, driver)
+
+
 		exploreFullPage(driver)
+
+
+		managePopups(hb_domain, driver)
 
 		
 		# Read filterlist rules
