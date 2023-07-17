@@ -19,12 +19,16 @@ A repository to crawl the bids, advertisers, and ads on websites.
 
 5. Create a directory: `consent-extension` inside the cloned project directory and cd into that directory. Next, clone [Consent-O-Matic](https://github.com/cavi-au/Consent-O-Matic) repository inside `consent-extension`.<br>
    `
-   mkdir consent-extension<br>
-   cd consent-extension<br>
+   mkdir consent-extension
+   `<br>
+   `
+   cd consent-extension
+   `<br>
+   `
    git clone https://github.com/cavi-au/Consent-O-Matic.git
    `
 
-6. Set necessary consents by modifying values of variables `D`, `A`, `B`, `E`, `F`, and `X` to either `true` or `false` (default). The meaning of these variables are explained [here](https://github.com/cavi-au/Consent-O-Matic#consent-categories). Set the values of these variables in the dictionary object: `GDPRConfig.defaultValues` present in the following file:<br>
+7. Set necessary consents by modifying values of variables `D`, `A`, `B`, `E`, `F`, and `X` to either `true` or `false` (default). The meaning of these variables are explained [here](https://github.com/cavi-au/Consent-O-Matic#consent-categories). Set the values of these variables in the dictionary object: `GDPRConfig.defaultValues` present in the following file:<br>
    `
    /consent-extension/Consent-O-Matic/Extension/GDPRConfig.js
    `
