@@ -16,8 +16,15 @@ A repository to crawl the bids, advertisers, and ads on websites.
    `
    conda env create -f environment.yml
    `
+
+5. Create a directory: `consent-extension` inside the cloned project directory and cd into that directory. Next, clone [Consent-O-Matic](https://github.com/cavi-au/Consent-O-Matic) repository inside `consent-extension`.
+   `
+   mkdir consent-extension
+   cd consent-extension
+   git clone https://github.com/cavi-au/Consent-O-Matic.git
+   `
    
-5. Run the crawler by provinding relevent arguments:<br>
+6. Run the crawler by provinding relevent arguments:<br>
    `
    python3 ad-crawler.py --profile="<profile-name>" --proxyport=<proxy-port> --chromedatadir="<user-profile-dir>"
    `
