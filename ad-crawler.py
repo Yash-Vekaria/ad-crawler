@@ -318,7 +318,7 @@ def main(args):
 
 
 		managePopups(hb_domain, driver)
-		# exit()
+		
 		
 		# Read filterlist rules
 		f = open(os.path.join(ROOT_DIRECTORY, "data", "EasyList", "easylist.txt"), "r")
