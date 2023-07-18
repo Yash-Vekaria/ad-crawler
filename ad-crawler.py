@@ -9,6 +9,7 @@ import selenium
 # from pyvirtualdisplay import Display
 import undetected_chromedriver as uc
 from browsermobproxy import Server
+from operator import attrgetter
 from time import sleep
 import pandas as pd
 import traceback
@@ -19,6 +20,7 @@ import codecs
 import time
 import sys
 import os
+import re
 
 sys.path.insert(0, './code/')
 from FullPageScreenshotCollector import *
@@ -64,14 +66,38 @@ def getChromeOptionsObject():
 	return chrome_options
 
 
-def managePopups(curr_domain, webdriver_):
+def acceptMissedConsents(webdriver_):
+	try:
+		missed = webdriver_.find_elements(By.XPATH, './/*[not(self::script) and self::button]')
+		button_click = []
+		for ele in missed:
+			try:
+				ele.str_html = ele.get_attribute('innerHTML').replace('\n', '').replace('\t', '')
+				if (re.match(r'(?:.*)(?:acept|accept|accet|got|agree|ok|cookie_accept|accept_cookie|SUTINKU|keep|close|cerrar)(?:.*)', ele.str_html, re.IGNORECASE) or 
+					re.match(r'(?:.*)(?:\ acept|\ accept|\ accet|\ got|\ agree|\ ok|\ cookie_accept|\ accept_cookie|\ SUTINKU)(?:.*)', ele.str_html, re.IGNORECASE)) and len(ele.text) < 16:
+					ele.html_len = len(ele.get_attribute("innerHTML"))
+					if ele.is_displayed():
+						button_click.append(ele)
+			except:
+				continue
+		if button_click:
+			bc = min(button_click, key=attrgetter('html_len'))
+			bc.click()
+			return
+	except:
+		return
 
+
+def managePopups(curr_domain, webdriver_):
 	try:
 		if "forbes.com" in curr_domain:
 			webdriver_.find_element(By.XPATH, '//button[@alt="Scroll Down"]').click()
 			sleep(2)
 		elif "guardian.co" in curr_domain:
 			webdriver_.find_element(By.XPATH, '//button[@data-link-name="choice-cards-buttons-banner-blue : close"]').click()
+			sleep(2)
+		elif "usatoday.com" in curr_domain:
+			webdriver_.find_element(By.XPATH, '//button[@aria-label="Close Special Offer"]').click()
 			sleep(2)
 		elif "chron.com" in curr_domain:
 			webdriver_.find_element(By.XPATH, '//a[@class="bc-close-button"]').click()
@@ -103,14 +129,24 @@ def managePopups(curr_domain, webdriver_):
 		elif "wunderground.com" in curr_domain:
 			webdriver_.find_element(By.XPATH, '//button/i[@class="material-icons"]').click()
 			sleep(2)
+		elif "tripadvisor.com" in curr_domain:
+			webdriver_.find_element(By.XPATH, '//button[@id="close-pc-btn-handler"]').click()
+			sleep(2)
+		elif "britannica.com" in curr_domain:
+			webdriver_.find_element(By.XPATH, '//a[@class="fancybox-item fancybox-close"]').click()
+			sleep(2)
+		elif "independent.co.uk" in curr_domain:
+			match = webdriver_.find_element(By.XPATH, '//iframe[@allow="payment"]')
+			if match:
+				webdriver_.switch_to.frame(match)
+				webdriver_.find_element(By.XPATH, '//button[@class="pn-template__close unbutton"]').click()
+				webdriver_.switch_to.default_content()
+			sleep(2)
 		elif "weather.com" in curr_domain:
-			click_svg_close_js = '''
-			const closeIcon = document.querySelector('section#privacy-data-notice svg');
-			closeIcon.dispatchEvent(new MouseEvent('click'));
-			'''
-			webdriver_.execute_script(click_svg_close_js)
+			webdriver_.find_element(By.XPATH, '//section[@id="privacy-data-notice"]//*[name()="svg"][@name="close"]').click()
 			sleep(2)
 	except BaseException as e:
+		webdriver_.switch_to.default_content()
 		pass
 
 	try:
@@ -120,7 +156,18 @@ def managePopups(curr_domain, webdriver_):
 		elif "slickdeals.net" in curr_domain:
 			webdriver_.find_element(By.XPATH, '//button[@data-role="close"]').click()
 			sleep(2)
+		elif "guardian.co" in curr_domain:
+			match = webdriver_.find_element(By.XPATH, '//iframe[@title="SP Consent Message"]')
+			if match:
+				webdriver_.switch_to.frame(match)
+				webdriver_.find_element(By.XPATH, '//div[@class="message-component message-row gu-content"]/button[@title="Close"]').click()
+				webdriver_.switch_to.default_content()
+			sleep(2)
+		elif "weather.com" in curr_domain:
+			webdriver_.find_element(By.XPATH, '//button[data-testid="ctaButton"]').click()
+			sleep(2)
 	except BaseException as e:
+		webdriver_.switch_to.default_content()
 		pass
 	return
 
@@ -146,7 +193,7 @@ def exploreFullPage(webdriver_):
 	return
 
 
-def configureProxy(port, profile_dir):
+def configureProxy(port, profile_name, profile_dir):
 	'''
 	Instatiate and start browsermobproxy to collect HAR files and accordingly configure chrome options
 	Killing open ports:
@@ -165,13 +212,14 @@ def configureProxy(port, profile_dir):
 
 	# Instantiate chromedriver options
 	chrome_options = getChromeOptionsObject()
-	
+
 	# Associate proxy-related settings to the chromedriver
 	chrome_options.add_argument("--proxy-server={}".format(proxy.proxy))
 	chrome_options.add_argument("--ignore-ssl-errors=yes")
 	chrome_options.add_argument("--use-littleproxy false")
 	chrome_options.add_argument("--proxy=127.0.0.1:%s" % port)
 	chrome_options.add_argument("--user-data-dir=%s" % profile_dir)
+	chrome_options.add_argument("--profile-directory=%s" % profile_name)
 	
 	return server, proxy, chrome_options
 
@@ -182,7 +230,7 @@ def main(args):
 
 	profile = args.profile
 	proxy_port = args.proxyport
-	chrome_profile_dir = args.chromedatadir.replace("Default", profile)
+	chrome_profile_dir = args.chromedatadir #.replace("Default", profile)
 	
 
 	# Reading Top 104 Header Bidding supported websites
@@ -190,7 +238,9 @@ def main(args):
 	hb_dict = readHeaderBiddingSites()
 
 	for idx, (hb_domain, hb_rank) in enumerate(hb_dict.items()):
-		
+
+		if hb_domain not in ["britannica.com"] and idx<23: #["independent.co.uk", "theguardian.com", "weather.com", "usatoday.com"]
+			continue
 		start_time = time.time()
 		print("\n\nStarting to crawl:", idx, hb_domain, hb_rank)
 
@@ -207,18 +257,18 @@ def main(args):
 
 
 		# Start the proxy server to facilitate capturing HAR file
-		server, proxy, chrome_options = configureProxy(proxy_port, chrome_profile_dir)
+		server, proxy, chrome_options = configureProxy(proxy_port, profile, chrome_profile_dir)
 		if server is None:
 			logger.write("Server issue while its initialization.")
 			continue
 		logger.write("\nBrowsermob-proxy successfully configured for domain: {} | {}!".format(hb_domain, profile))
 		print("\nBrowsermob-proxy successfully configured for domain: {} | {}!!".format(hb_domain, profile))
-
+		
 
 		# Start the chromedriver instance
 		try:
 			# driver = uc.Chrome(service=Service(ChromeDriverManager().install()), version_main=114, options=chrome_options) #executable_path=‘chromedriver’
-			driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+			driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=getChromeOptionsObject())
 		except BaseException as error:
 			# print("\nAn exception occurred:", traceback.format_exc(), "while initializing the webdriver for domain:", hb_domain)
 			server.stop()
@@ -255,18 +305,20 @@ def main(args):
 			print("\nChromedriver successfully loaded!")
 			continue
 		# Wait for page to completely load
-		sleep(30)
+		sleep(10)
 		print("Visiting and loading webpage ...")
 
 
 		managePopups(hb_domain, driver)
 
 
+		acceptMissedConsents(driver)
 		exploreFullPage(driver)
+		acceptMissedConsents(driver)
 
 
 		managePopups(hb_domain, driver)
-
+		# exit()
 		
 		# Read filterlist rules
 		f = open(os.path.join(ROOT_DIRECTORY, "data", "EasyList", "easylist.txt"), "r")
