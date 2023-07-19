@@ -237,85 +237,104 @@ class AdCollector():
 					f"return Array.from(ads);"
 
 		# ################# CSS MATCHING #################
-		matching_css_elements = webdriver.execute_script(js_script)
-		for idx, match in enumerate(matching_css_elements):
-			try:
-				if match in observed_elements:
-					continue
-				observed_elements.add(match)
-				
-				'''
-				matched_element_location = match.location
-				matched_element_x, matched_element_y = matched_element_location["x"], matched_element_location["y"]
-				location_string = str(matched_element_x) + "-" + str(matched_element_y)
-				rgb = match.value_of_css_property('background-color')
-				matched_element_color = Color.from_string(rgb).hex
-				print(idx, matched_element_color, match.size, matched_element_location, location_string)
-				'''
+		try:
+			matching_css_elements = webdriver.execute_script(js_script)
+			for idx, match in enumerate(matching_css_elements):
+				try:
+					if match in observed_elements:
+						continue
+					observed_elements.add(match)
+					
+					'''
+					matched_element_location = match.location
+					matched_element_x, matched_element_y = matched_element_location["x"], matched_element_location["y"]
+					location_string = str(matched_element_x) + "-" + str(matched_element_y)
+					rgb = match.value_of_css_property('background-color')
+					matched_element_color = Color.from_string(rgb).hex
+					print(idx, matched_element_color, match.size, matched_element_location, location_string)
+					'''
 
-				self.captureScreenshot(match, os.path.join(self.ads_output_path, str(idx) + '_css.png'))
-				src_attributes, href_attributes = self.getMatchedElementAttributes(match, "CSS", webdriver)
-				
-				css_source_matches.append(str(idx) + ',' + str(src_attributes))
-				css_href_matches.append(str(idx) + ',' + str(href_attributes))
-				
-				if href_attributes is not None and href_attributes.strip() != "":
-					self.storeAdResponse(href_attributes.split('||')[0], os.path.join(self.ads_output_path, str(idx) + '_css_response.pickle'))
-				sleep(0.5)
+					self.captureScreenshot(match, os.path.join(self.ads_output_path, str(idx) + '_css.png'))
+					src_attributes, href_attributes = self.getMatchedElementAttributes(match, "CSS", webdriver)
+					
+					css_source_matches.append(str(idx) + ',' + str(src_attributes))
+					css_href_matches.append(str(idx) + ',' + str(href_attributes))
+					
+					if href_attributes is not None and href_attributes.strip() != "":
+						self.storeAdResponse(href_attributes.split('||')[0], os.path.join(self.ads_output_path, str(idx) + '_css_response.pickle'))
+					sleep(0.5)
 
-			except Exception as exc:
-				if ("Cannot take screenshot with 0 width" in str(exc)) or ("Cannot take screenshot with 0 height" in str(exc)):
-					continue
-				self.logger.write("\n[ERROR] collectAds()::AdCollector: {}\nException occured in CSS ad collection for domain: {} | {}".format(str(traceback.format_exc()), self.site, self.profile))
-				# print('Exception while matching CSS', str(exc))
-				pass
-		self.logger.write("\nCSS ads collected for domain: {} | {}".format(self.site, self.profile))
-		webdriver.execute_script("window.scrollTo(0, 0);")
+				except Exception as exc:
+					if ("Cannot take screenshot with 0 width" in str(exc)) or ("Cannot take screenshot with 0 height" in str(exc)):
+						continue
+					self.logger.write("\n[ERROR] collectAds()::AdCollector: {}\nException occured in CSS ad collection for domain: {} | {}".format(str(traceback.format_exc()), self.site, self.profile))
+					# print('Exception while matching CSS', str(exc))
+					pass
+			self.logger.write("\nCSS ads collected for domain: {} | {}".format(self.site, self.profile))
+		except BaseException as e:
+			self.logger.write("\nCSS ad collection failure: {} for domain: {} | {}".format(str(traceback.format_exc()), self.site, self.profile))
+			pass
+		try:
+			webdriver.execute_script("window.scrollTo(0, 0);")
+		except:
+			pass
 		sleep(5)
 
 
 		# ################# IFRAME MATCHING #################
-		iframe_elements = webdriver.find_elements(By.TAG_NAME, 'iframe')
-		for idx, iframe in enumerate(iframe_elements):
-			try:
-				if iframe in observed_elements:
-					continue
-				observed_elements.add(iframe)
+		try:
+			iframe_elements = webdriver.find_elements(By.TAG_NAME, 'iframe')
+			for idx, iframe in enumerate(iframe_elements):
+				try:
+					if iframe in observed_elements:
+						continue
+					observed_elements.add(iframe)
 
-				ad_ss_path = os.path.join(self.ads_output_path, str(idx) + '_iframe.png')
-				self.captureScreenshot(iframe, ad_ss_path)
-				
-				src_attributes, href_attributes = self.getMatchedElementAttributes(iframe, "IFRAME", webdriver)
-				# print("iframe:", idx, len(src_attributes), len(href_attributes))
-				
-				if len(src_attributes) == 0 and len(href_attributes) == 0:
-					# print("Removing file: iframe-{}".format(idx))
-					os.remove(ad_ss_path)
+					ad_ss_path = os.path.join(self.ads_output_path, str(idx) + '_iframe.png')
+					self.captureScreenshot(iframe, ad_ss_path)
+					
+					src_attributes, href_attributes = self.getMatchedElementAttributes(iframe, "IFRAME", webdriver)
+					# print("iframe:", idx, len(src_attributes), len(href_attributes))
+					
+					if len(src_attributes) == 0 and len(href_attributes) == 0:
+						# print("Removing file: iframe-{}".format(idx))
+						os.remove(ad_ss_path)
 
-				iframe_source_matches.append(str(idx) + ',' + "||".join(src_attributes))
-				iframe_href_matches.append(str(idx) + ',' + "||".join(href_attributes))
-				
-				if href_attributes is not None and "||".join(href_attributes).strip() != "":
-					self.storeAdResponse(href_attributes[0], os.path.join(self.ads_output_path, str(idx) + '_css_response.pickle'))
-				sleep(0.5)
-				
+					iframe_source_matches.append(str(idx) + ',' + "||".join(src_attributes))
+					iframe_href_matches.append(str(idx) + ',' + "||".join(href_attributes))
+					
+					if href_attributes is not None and "||".join(href_attributes).strip() != "":
+						self.storeAdResponse(href_attributes[0], os.path.join(self.ads_output_path, str(idx) + '_css_response.pickle'))
+					sleep(0.5)
+					
 
-			except Exception as exc:
-				if ("Cannot take screenshot with 0 width" in str(exc)) or ("Cannot take screenshot with 0 height" in str(exc)):
-					continue
-				self.logger.write("\n[ERROR] collectAds()::AdCollector: {}\nException occured in iframe ad collection for domain: {} | {}".format(str(traceback.format_exc()), self.site, self.profile))
-				# print('Exception while matching iframes', str(exc))
-				pass
-		self.logger.write("\nIframe ads collected for domain: {} | {}".format(self.site, self.profile))
+				except Exception as exc:
+					if ("Cannot take screenshot with 0 width" in str(exc)) or ("Cannot take screenshot with 0 height" in str(exc)):
+						continue
+					self.logger.write("\n[ERROR] collectAds()::AdCollector: {}\nException occured in iframe ad collection for domain: {} | {}".format(str(traceback.format_exc()), self.site, self.profile))
+					# print('Exception while matching iframes', str(exc))
+					pass
+			self.logger.write("\nIframe ads collected for domain: {} | {}".format(self.site, self.profile))
+		except BaseException as e:
+			self.logger.write("\nIframe ad collection failure: {} for domain: {} | {}".format(str(traceback.format_exc()), self.site, self.profile))
+			pass
+		try:
+			webdriver.execute_script("window.scrollTo(0, 0);")
+		except:
+			pass
 
+		try:
+			print("Succesfully captured " + str(len(css_source_matches)) + " CSS-based element screenshots out of " + str(len(matching_css_elements)))
+			print("Succesfully captured " + str(len(iframe_source_matches)) + " iframe-based screenshots out of " + str(len(iframe_elements)))
+			self.logger.write("\nSuccesfully captured {} CSS-based element screenshots out of {} for domain: {} | {}".format(str(len(css_source_matches)), str(len(matching_css_elements)), self.site, self.profile))
+			self.logger.write("\nSuccesfully captured {} iframe-based screenshots out of {} for domain: {} | {}".format(str(len(iframe_source_matches)), str(len(iframe_elements)), self.site, self.profile))
+			
+			self.write_data(os.path.join(self.ads_output_path, '..', 'iframe_source_matches.csv'), iframe_source_matches)
+			self.write_data(os.path.join(self.ads_output_path, '..', 'iframe_href_matches.csv'), iframe_href_matches)
+			self.write_data(os.path.join(self.ads_output_path, '..', 'cssmatch_screenshot_logs_src.csv'), css_source_matches)
+			self.write_data(os.path.join(self.ads_output_path, '..', 'cssmatch_screenshot_logs_href.csv'), css_href_matches)
+		except BaseException as e:
+			self.logger.write("\nWriting ad output failure: {} for domain: {} | {}".format(str(traceback.format_exc()), self.site, self.profile))
+			pass
 
-		print("Succesfully captured " + str(len(css_source_matches)) + " CSS-based element screenshots out of " + str(len(matching_css_elements)))
-		print("Succesfully captured " + str(len(iframe_source_matches)) + " iframe-based screenshots out of " + str(len(iframe_elements)))
-		self.logger.write("\nSuccesfully captured {} CSS-based element screenshots out of {} for domain: {} | {}".format(str(len(css_source_matches)), str(len(matching_css_elements)), self.site, self.profile))
-		self.logger.write("\nSuccesfully captured {} iframe-based screenshots out of {} for domain: {} | {}".format(str(len(iframe_source_matches)), str(len(iframe_elements)), self.site, self.profile))
-		
-		self.write_data(os.path.join(self.ads_output_path, '..', 'iframe_source_matches.csv'), iframe_source_matches)
-		self.write_data(os.path.join(self.ads_output_path, '..', 'iframe_href_matches.csv'), iframe_href_matches)
-		self.write_data(os.path.join(self.ads_output_path, '..', 'cssmatch_screenshot_logs_src.csv'), css_source_matches)
-		self.write_data(os.path.join(self.ads_output_path, '..', 'cssmatch_screenshot_logs_href.csv'), css_href_matches)
 		return
