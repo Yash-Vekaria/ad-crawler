@@ -20,10 +20,10 @@ import codecs
 import time
 import sys
 import os
-import re
 
 sys.path.insert(0, './code/')
 from FullPageScreenshotCollector import *
+from CustomPopupManager import *
 from BidCollector import *
 from AdCollector import *
 
@@ -51,8 +51,10 @@ def readHeaderBiddingSites():
 
 def getChromeOptionsObject():
 	chrome_options = Options()
+	chrome_options.binary_location = "/usr/bin/google-chrome-stable" 
 	# chrome_options.add_argument("--headless")
 	chrome_options.add_argument("--no-sandbox")
+	chrome_options.add_argument("--disable-gpu")
 	chrome_options.add_argument("--disable-dev-shm-usage")
 	chrome_options.add_argument("--window-size=1536,864")
 	chrome_options.add_argument("--start-maximized")
@@ -64,112 +66,6 @@ def getChromeOptionsObject():
 	extension_dir = os.path.join(os.getcwd(), "consent-extension", "Consent-O-Matic", "Extension")
 	chrome_options.add_argument('--load-extension={}'.format(extension_dir))
 	return chrome_options
-
-
-def acceptMissedConsents(webdriver_):
-	try:
-		missed = webdriver_.find_elements(By.XPATH, './/*[not(self::script) and self::button]')
-		button_click = []
-		for ele in missed:
-			try:
-				ele.str_html = ele.get_attribute('innerHTML').replace('\n', '').replace('\t', '')
-				if (re.match(r'(?:.*)(?:acept|accept|accet|got|agree|ok|cookie_accept|accept_cookie|SUTINKU|keep|close|cerrar)(?:.*)', ele.str_html, re.IGNORECASE) or 
-					re.match(r'(?:.*)(?:\ acept|\ accept|\ accet|\ got|\ agree|\ ok|\ cookie_accept|\ accept_cookie|\ SUTINKU)(?:.*)', ele.str_html, re.IGNORECASE)) and len(ele.text) < 16:
-					ele.html_len = len(ele.get_attribute("innerHTML"))
-					if ele.is_displayed():
-						button_click.append(ele)
-			except:
-				continue
-		if button_click:
-			bc = min(button_click, key=attrgetter('html_len'))
-			bc.click()
-			return
-	except:
-		return
-
-
-def managePopups(curr_domain, webdriver_):
-	try:
-		if "forbes.com" in curr_domain:
-			webdriver_.find_element(By.XPATH, '//button[@alt="Scroll Down"]').click()
-			sleep(2)
-		elif "guardian.co" in curr_domain:
-			webdriver_.find_element(By.XPATH, '//button[@data-link-name="choice-cards-buttons-banner-blue : close"]').click()
-			sleep(2)
-		elif "usatoday.com" in curr_domain:
-			webdriver_.find_element(By.XPATH, '//button[@aria-label="Close Special Offer"]').click()
-			sleep(2)
-		elif "chron.com" in curr_domain:
-			webdriver_.find_element(By.XPATH, '//a[@class="bc-close-button"]').click()
-			sleep(2)
-		elif "dailymail.co.uk" in curr_domain:
-			webdriver_.find_element(By.XPATH, '//div[@id="closeButton"]').click()
-			sleep(2)
-		elif "goo.ne.jp" in curr_domain:
-			webdriver_.find_element(By.XPATH, '//button[@class="webpush-title-close"]').click()
-			sleep(2)
-		elif "latimes.com" in curr_domain:
-			ele = webdriver_.find_element(By.XPATH, '//modality-custom-element[@name="metering-bottompanel"]')
-			shadow_ele = ele.find_element(By.CSS_SELECTOR, '#shadow-root')
-			shadow_ele.find_element(By.XPATH, '//a[@class="met-flyout-close"]').click()
-			driver.switch_to.default_content()
-			sleep(2)
-		elif "marketwatch.com" in curr_domain:
-			webdriver_.find_element(By.XPATH, '//button[@class="close-btn"]').click()
-			sleep(2)
-		elif "nydailynews.com" in curr_domain:
-			webdriver_.find_element(By.XPATH, '//button[@id="onesignal-slidedown-cancel-button"]').click()
-			sleep(2)
-		elif "sfgate.com" in curr_domain:
-			webdriver_.find_element(By.XPATH, '//a[@class="fancybox-item fancybox-close"]').click()
-			sleep(2)
-		elif "slickdeals.net" in curr_domain:
-			webdriver_.find_element(By.XPATH, '//a[@class="sd-emailOnlyRegistrationWithLogin_laterLink"]').click()
-			sleep(2)
-		elif "wunderground.com" in curr_domain:
-			webdriver_.find_element(By.XPATH, '//button/i[@class="material-icons"]').click()
-			sleep(2)
-		elif "tripadvisor.com" in curr_domain:
-			webdriver_.find_element(By.XPATH, '//button[@id="close-pc-btn-handler"]').click()
-			sleep(2)
-		elif "britannica.com" in curr_domain:
-			webdriver_.find_element(By.XPATH, '//a[@class="fancybox-item fancybox-close"]').click()
-			sleep(2)
-		elif "independent.co.uk" in curr_domain:
-			match = webdriver_.find_element(By.XPATH, '//iframe[@allow="payment"]')
-			if match:
-				webdriver_.switch_to.frame(match)
-				webdriver_.find_element(By.XPATH, '//button[@class="pn-template__close unbutton"]').click()
-				webdriver_.switch_to.default_content()
-			sleep(2)
-		elif "weather.com" in curr_domain:
-			webdriver_.find_element(By.XPATH, '//section[@id="privacy-data-notice"]//*[name()="svg"][@name="close"]').click()
-			sleep(2)
-	except BaseException as e:
-		webdriver_.switch_to.default_content()
-		pass
-
-	try:
-		if "sfgate.com" in curr_domain:
-			webdriver_.find_element(By.XPATH, '//div[@class="exp-ui__sticky__close-btn"]').click()
-			sleep(2)
-		elif "slickdeals.net" in curr_domain:
-			webdriver_.find_element(By.XPATH, '//button[@data-role="close"]').click()
-			sleep(2)
-		elif "guardian.co" in curr_domain:
-			match = webdriver_.find_element(By.XPATH, '//iframe[@title="SP Consent Message"]')
-			if match:
-				webdriver_.switch_to.frame(match)
-				webdriver_.find_element(By.XPATH, '//div[@class="message-component message-row gu-content"]/button[@title="Close"]').click()
-				webdriver_.switch_to.default_content()
-			sleep(2)
-		elif "weather.com" in curr_domain:
-			webdriver_.find_element(By.XPATH, '//button[data-testid="ctaButton"]').click()
-			sleep(2)
-	except BaseException as e:
-		webdriver_.switch_to.default_content()
-		pass
-	return
 
 
 def exploreFullPage(webdriver_):
@@ -219,7 +115,7 @@ def configureProxy(port, profile_name, profile_dir):
 	chrome_options.add_argument("--use-littleproxy false")
 	chrome_options.add_argument("--proxy=127.0.0.1:%s" % port)
 	chrome_options.add_argument("--user-data-dir=%s" % profile_dir)
-	chrome_options.add_argument("--profile-directory=%s" % profile_name)
+	# chrome_options.add_argument("--profile-directory=%s" % profile_name)
 	
 	return server, proxy, chrome_options
 
@@ -230,7 +126,7 @@ def main(args):
 
 	profile = args.profile
 	proxy_port = args.proxyport
-	chrome_profile_dir = args.chromedatadir #.replace("Default", profile)
+	chrome_profile_dir = args.chromedatadir.replace("Default", profile)
 	
 
 	# Reading Top 104 Header Bidding supported websites
@@ -239,8 +135,6 @@ def main(args):
 
 	for idx, (hb_domain, hb_rank) in enumerate(hb_dict.items()):
 
-		if hb_domain not in ["britannica.com"] and idx<23: #["independent.co.uk", "theguardian.com", "weather.com", "usatoday.com"]
-			continue
 		start_time = time.time()
 		print("\n\nStarting to crawl:", idx, hb_domain, hb_rank)
 
@@ -268,7 +162,7 @@ def main(args):
 		# Start the chromedriver instance
 		try:
 			# driver = uc.Chrome(service=Service(ChromeDriverManager().install()), version_main=114, options=chrome_options) #executable_path=‘chromedriver’
-			driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=getChromeOptionsObject())
+			driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 		except BaseException as error:
 			# print("\nAn exception occurred:", traceback.format_exc(), "while initializing the webdriver for domain:", hb_domain)
 			server.stop()
@@ -309,16 +203,17 @@ def main(args):
 		print("Visiting and loading webpage ...")
 
 
-		managePopups(hb_domain, driver)
+		cpm = CustomPopupManager(hb_domain)
+		cpm.managePopups(driver)
 
 
-		acceptMissedConsents(driver)
+		cpm.acceptMissedConsents(driver)
 		exploreFullPage(driver)
-		acceptMissedConsents(driver)
+		cpm.acceptMissedConsents(driver)
 
 
-		managePopups(hb_domain, driver)
-		
+		cpm.managePopups(driver)
+
 		
 		# Read filterlist rules
 		f = open(os.path.join(ROOT_DIRECTORY, "data", "EasyList", "easylist.txt"), "r")
@@ -345,13 +240,12 @@ def main(args):
 		# Take fullpage screenshot of the webpage
 		screenshot_output_path = os.path.join(experimental_path, str(hb_domain)+"_ss-before.png")
 		ss_object = FullPageScreenshotCollector(profile, hb_domain, hb_rank, screenshot_output_path)
-		status = ss_object.captureFullScreenshot(driver, logger)
-		if status:
-			logger.write("\nFull page screnshot successfully captured.")
-		else:
-			logger.write("\n[ERROR] main()::FullPageScreenshotCollector: {}\nIssue in capturing full page screenshot for {} | {}.".format(str(traceback.format_exc()), hb_domain, profile))
-		# Move to the top and wait for dynamically updated ads to completely load
-		driver.execute_script("window.scrollTo(0, 0);")
+		ss_object.captureFullScreenshot(driver, logger)
+		logger.write("\nFull page screnshot successfully captured.")
+		try:
+			driver.execute_script("window.scrollTo(0, 0);")
+		except:
+			pass
 		sleep(10)
 		print("Fullpage screenshot of the webpage captured")
 
@@ -376,7 +270,10 @@ def main(args):
 		else:
 			logger.write("\n[ERROR] main()::FullPageScreenshotCollector: {}\nIssue in capturing full page screenshot for {} | {}.".format(str(traceback.format_exc()), hb_domain, profile))
 		# Move to the top and wait for dynamically updated ads to completely load
-		driver.execute_script("window.scrollTo(0, 0);")
+		try:
+			driver.execute_script("window.scrollTo(0, 0);")
+		except:
+			pass
 		print("Fullpage screenshot of the webpage captured")
 
 
