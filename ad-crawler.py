@@ -9,7 +9,6 @@ import selenium
 # from pyvirtualdisplay import Display
 import undetected_chromedriver as uc
 from browsermobproxy import Server
-from operator import attrgetter
 from time import sleep
 import pandas as pd
 import traceback
