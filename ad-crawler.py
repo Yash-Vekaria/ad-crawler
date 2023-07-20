@@ -79,7 +79,7 @@ def exploreFullPage(webdriver_):
 		for i in range(1, page_height, 10):
 			try:
 				webdriver_.execute_script("window.scrollTo(0, {});".format(i))
-				sleep(0.025)
+				sleep(0.05)
 			except:
 				continue
 		sleep(2)
@@ -87,7 +87,7 @@ def exploreFullPage(webdriver_):
 	except:
 		pass
 	# Wait for new ads to completely load
-	sleep(10)
+	sleep(6)
 	return
 
 
