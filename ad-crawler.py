@@ -181,6 +181,7 @@ def main(args):
 		except BaseException as error:
 			logger.write("\n[ERROR] main()::HarCaptureStart: {}\n for domain: {} | {}".format(str(traceback.format_exc()), hb_domain, profile))
 			pass
+		logger.write("\nHAR capture started!")
 		print("Starting HAR Capture")
 
 
@@ -203,6 +204,7 @@ def main(args):
 		# Wait for page to completely load
 		sleep(10)
 		print("Visiting and loading webpage ...")
+		logger.write("\nVisiting and loading webpage ...")
 
 
 		cpm = CustomPopupManager(hb_domain)
@@ -210,11 +212,14 @@ def main(args):
 
 
 		cpm.acceptMissedConsents(driver)
+		logger.write("\nPopup-Consent-1 handled!")
 		exploreFullPage(driver)
+		logger.write("\nWebpage explored fully.")
 		cpm.acceptMissedConsents(driver)
 
 
 		cpm.managePopups(driver)
+		logger.write("\nPopup-Consent-2 handled!")
 
 		
 		# Read filterlist rules
@@ -225,11 +230,17 @@ def main(args):
 
 
 		# Save DOM of the webpage
-		dom_filepath = os.path.join(experimental_path, str(hb_domain)+"_DOM.html")
-		fdom = codecs.open(dom_filepath, "w", "utf−8")
-		fdom.write(driver.page_source)
-		fdom.close()
-		print("DOM saved")
+		try:
+			dom_filepath = os.path.join(experimental_path, str(hb_domain)+"_DOM.html")
+			fdom = codecs.open(dom_filepath, "w", "utf−8")
+			fdom.write(driver.page_source)
+			fdom.close()
+			logger.write("\nDOM saved.")
+			print("DOM saved")
+		except BaseException as e:
+			print("\n[ERROR] DOM-Capture: {}".format(str(traceback.format_exc())))
+			logger.write("\n[ERROR] main()::DOM-Capture: {} for domain: {} | {}".format(str(traceback.format_exc()), hb_domain, profile))
+			pass
 
 
 		# Perform bid collection
