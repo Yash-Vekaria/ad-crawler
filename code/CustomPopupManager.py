@@ -1,5 +1,6 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver import ActionChains
+from operator import attrgetter
 from time import sleep
 import re
 
