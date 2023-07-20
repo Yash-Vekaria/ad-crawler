@@ -66,6 +66,9 @@ class CustomPopupManager():
 			elif "merriam-webster.com" in self.curr_domain:
 				webdriver_.find_element(By.XPATH, '//*[contains(text(), "Accept All")]').click()
 				sleep(2)
+			elif "fastcompany.com" in self.curr_domain:
+				webdriver_.find_element(By.XPATH, '//*[contains(text(), "    Yes, I Accept  ")]').click()
+				sleep(2)
 			elif "people.com" in self.curr_domain:
 				webdriver_.find_element(By.XPATH, '//div[@class="jumpstart-js-wrapper "]/div/div[@aria-label="Close sticky player"]').click()
 				sleep(2)
