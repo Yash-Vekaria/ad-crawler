@@ -28,9 +28,18 @@ class CustomPopupManager():
 			if button_click:
 				bc = min(button_click, key=attrgetter('html_len'))
 				bc.click()
-				return
+				pass
 		except:
-			return
+			pass
+		try:
+			webdriver_.find_element(By.XPATH, '//button[contains(text(), "Accept")]').click()
+		except:
+			pass
+		try:
+			webdriver_.find_element(By.XPATH, '//button[contains(text(), "Accept All")]').click()
+		except:
+			pass
+		return
 
 
 	def managePopups(self, webdriver_):
