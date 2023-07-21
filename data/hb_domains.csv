@@ -77,7 +77,6 @@ tranco_rank,tranco_domain,hb_status
 1293,qz.com,True
 1347,discovery.com,True
 1348,techradar.com,True
-1349,gda.pl,True
 1363,realtor.com,True
 1389,people.com,True
 1395,wp.pl,False
@@ -104,8 +103,6 @@ tranco_rank,tranco_domain,hb_status
 1638,lifehacker.com,True
 1653,nymag.com,True
 1667,theglobeandmail.com,False
-1672,iheart.com,True
-1678,nydailynews.com,True
 1714,foodnetwork.com,True
 1715,espncricinfo.com,False
 1739,thebalancemoney.com,True
@@ -119,7 +116,6 @@ tranco_rank,tranco_domain,hb_status
 1898,ask.com,True
 1937,allrecipes.com,True
 1938,slickdeals.net,True
-1939,rr.com,True
 1951,cbslocal.com,True
 1957,vogue.com,True
 1977,salon.com,True
