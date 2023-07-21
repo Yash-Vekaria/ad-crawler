@@ -12,12 +12,10 @@ crawler.py
 **/.DS_Store
 *.log
 
-# Ignored website
+# Ignored website: Not supported for UK
 # 188,tds.net,True
+# 1349,gda.pl,True
+# 1672,iheart.com,True
+# 1678,nydailynews.com,True
 # 1684,vnexpress.net,True
-
-# Not supported for UK
-# gda.pl
-# iheart.com
-# nydailynews.com
-# rr.com
+# 1939,rr.com,True
