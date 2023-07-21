@@ -1,6 +1,5 @@
 tranco_rank,tranco_domain,hb_status
 97,nytimes.com,True
-127,cnn.com,True
 145,forbes.com,True
 149,theguardian.com,True
 154,bbc.com,True
@@ -57,7 +56,6 @@ tranco_rank,tranco_domain,hb_status
 968,ria.ru,False
 972,gizmodo.com,True
 975,softonic.com,False
-990,gamespot.com,True
 1002,inc.com,True
 1014,thesun.co.uk,True
 1020,wowhead.com,True
@@ -121,3 +119,5 @@ tranco_rank,tranco_domain,hb_status
 1977,salon.com,True
 1993,esquire.com,True
 1999,cosmopolitan.com,True
+990,gamespot.com,True
+127,cnn.com,True
