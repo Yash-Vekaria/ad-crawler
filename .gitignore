@@ -13,4 +13,11 @@ crawler.py
 *.log
 
 # Ignored website
+# 188,tds.net,True
 # 1684,vnexpress.net,True
+
+# Not supported for UK
+# gda.pl
+# iheart.com
+# nydailynews.com
+# rr.com

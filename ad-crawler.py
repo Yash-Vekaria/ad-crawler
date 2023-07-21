@@ -206,7 +206,14 @@ def main(args):
 		logger.write("\nVisiting and loading webpage ...")
 
 
-		cpm = CustomPopupManager(hb_domain)
+		# Read custom popup handling rules
+		f = open(os.path.join(ROOT_DIRECTORY, "data", "custom-popup-xpaths.txt"), "r")
+		prules = f.read().split("\n")
+		f.close()
+		prule_dict = {prule.split(" | ")[0]: list(prule.split(" | ")[1:]) for prule in prules}
+
+
+		cpm = CustomPopupManager(hb_domain, prule_dict)
 		cpm.managePopups(driver)
 
 
