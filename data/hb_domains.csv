@@ -56,7 +56,6 @@ tranco_rank,tranco_domain,hb_status
 968,ria.ru,False
 972,gizmodo.com,True
 975,softonic.com,False
-1002,inc.com,True
 1014,thesun.co.uk,True
 1020,wowhead.com,True
 1038,timeanddate.com,True
@@ -75,10 +74,8 @@ tranco_rank,tranco_domain,hb_status
 1293,qz.com,True
 1347,discovery.com,True
 1348,techradar.com,True
-1363,realtor.com,True
 1389,people.com,True
 1395,wp.pl,False
-1398,chron.com,True
 1404,hatena.ne.jp,True
 1435,fool.com,False
 1442,thoughtco.com,True

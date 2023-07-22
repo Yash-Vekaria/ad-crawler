@@ -53,6 +53,13 @@ class CustomPopupManager():
 					webdriver_.find_element(By.XPATH, '//button[@class="pn-template__close unbutton"]').click()
 					webdriver_.switch_to.default_content()
 				sleep(2)
+			elif "britannica.com" in self.curr_domain or "newsweek.com" in self.curr_domain:
+				match = webdriver_.find_element(By.XPATH, '//iframe[@id="gdpr-consent-notice"]')
+				if match:
+					webdriver_.switch_to.frame(match)
+					webdriver_.find_element(By.XPATH, '//span[contains(text(), "Accept All")]').click()
+					webdriver_.switch_to.default_content()
+				sleep(2)
 			elif "latimes.com" in self.curr_domain:
 				shadow_access_js = '''return document.querySelector('modality-custom-element').shadowRoot.querySelector('a[class="met-flyout-close"]')'''
 				webdriver_.execute_script(shadow_access_js).click()

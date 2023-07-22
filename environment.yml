@@ -44,10 +44,12 @@ dependencies:
       - packaging==23.1
       - pandas==2.0.3
       - pillow==10.0.0
+      - psutil==5.9.5
       - pysocks==1.7.1
       - python-dateutil==2.8.2
       - python-dotenv==1.0.0
       - pytz==2023.3
+      - pyvirtualdisplay==3.0
       - requests==2.31.0
       - selenium==4.10.0
       - selenium-screenshot==2.1.0
@@ -60,7 +62,9 @@ dependencies:
       - trio==0.22.1
       - trio-websocket==0.10.3
       - tzdata==2023.3
+      - undetected-chromedriver==3.5.0
       - urllib3==2.0.3
       - webdriver-manager==3.8.6
+      - websockets==11.0.3
       - wsproto==1.2.0
       - zope-interface==6.0

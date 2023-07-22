@@ -6,6 +6,7 @@ from tld import get_fld
 from time import sleep
 import traceback
 import requests
+import pickle
 import json
 import time
 import os
@@ -13,7 +14,7 @@ import os
 
 class AdCollector():
 	
-	def __init__(self, profile, site, tranco_rank, filter_rules, ads_output_path, logger) -> None:
+	def __init__(self, profile, site, tranco_rank, filter_rules, ads_output_path, easylist_dir, logger) -> None:
 		self.profile = profile
 		self.site = site
 		self.tranco_rank = tranco_rank
@@ -21,7 +22,7 @@ class AdCollector():
 		self.ads_output_path = ads_output_path
 		self.ad_url_classifocation = {}
 		self.logger = logger
-		self.easylist_rules = self.setupEasyList()
+		self.easylist_rules = self.setupEasyList(easylist_dir)
 
 
 	def storeAdResponse(self, url, output_path):
@@ -49,10 +50,9 @@ class AdCollector():
 		return
 
 	
-	def setupEasyList(self):
+	def setupEasyList(self, easylist_dir):
 		# 'easylist': 'https://easylist.to/easylist/easylist.txt' (accessed on July 03, 2023)
-		EASYLIST_DIR = "./data/EasyList"
-		filepath = os.path.join(EASYLIST_DIR, "easylist.txt")
+		filepath = os.path.join(easylist_dir, "easylist.txt")
 		try:
 			with open(filepath) as f:
 				rules = f.readlines()

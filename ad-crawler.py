@@ -6,8 +6,7 @@ from selenium.webdriver import Chrome
 from selenium import webdriver
 import selenium
 
-# from pyvirtualdisplay import Display
-import undetected_chromedriver as uc
+# import undetected_chromedriver as uc
 from browsermobproxy import Server
 from time import sleep
 import pandas as pd
@@ -15,6 +14,7 @@ import traceback
 import argparse
 import datetime
 import zipfile
+import psutil
 import codecs
 import time
 import sys
@@ -26,17 +26,30 @@ from CustomPopupManager import *
 from BidCollector import *
 from AdCollector import *
 
-
+DOCKER = True
+if DOCKER:
+	from pyvirtualdisplay import Display
+	disp = Display(backend="xvnc", size=(1920,1080), rfbport=1212) # 1212 has to be a random port number
+	disp.start()
 
 ROOT_DIRECTORY = os.getcwd()
 
 
+
 def parseArguments():
+	global ROOT_DIRECTORY;
 	# python3 ad-crawler.py --profile="Test" --proxyport=8022 --chromedatadir="/home/yvekaria/.config/google-chrome/ProfileTest"
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-p", "--profile", type=str, required=True, help="Enter the type of profile being crawled. Valid inputs are ['TV-Blank', 'TV-Trained', 'HB-Checker']")
 	parser.add_argument("-px", "--proxyport", type=int, required=True, help="Enter the port on which browsermob-proxy is to be run.")
 	parser.add_argument("-c", "--chromedatadir", type=str, required=True, help="Enter the Chrome's data directory path: Open Chrome's latest stable version installed => Type chrome://version => Input 'Profile Path' without")
+	if DOCKER:
+		# docker build -t ad-crawler .
+		# docker container ls -a | grep ad-crawler
+		# docker container logs -f <container-id>
+		# docker rm -f <container-id>
+		# docker run -d -e PYTHONUNBUFFERED=1 -v $(pwd):/root -v /home/yvekaria/.config/google-chrome/Test:/profile -p 20000:1212 --shm-size=10g ad-crawler python3.11 ad-crawler.py -p "Test" -px 8022 -c "/home/yvekaria/.config/google-chrome/Test" -mp "/root"
+		parser.add_argument("-mp", "--mountpath", type=str, required=False, help="Mounted path from docker run command")
 	args = parser.parse_args()
 	return args
 
@@ -49,6 +62,7 @@ def readHeaderBiddingSites():
 
 
 def getChromeOptionsObject():
+	global ROOT_DIRECTORY;
 	chrome_options = Options()
 	chrome_options.binary_location = "/usr/bin/google-chrome-stable" 
 	# chrome_options.add_argument("--headless")
@@ -64,7 +78,7 @@ def getChromeOptionsObject():
 	chrome_options.add_argument("--disable-notifications")
 	chrome_options.add_argument("--disable-popup-blocking")
 	chrome_options.add_argument("--ignore-certificate-errors")
-	extension_dir = os.path.join(os.getcwd(), "consent-extension", "Consent-O-Matic", "Extension")
+	extension_dir = os.path.join(ROOT_DIRECTORY, "consent-extension", "Consent-O-Matic", "Extension")
 	chrome_options.add_argument('--load-extension={}'.format(extension_dir))
 	return chrome_options
 
@@ -98,9 +112,40 @@ def configureProxy(port, profile_name, profile_dir):
 		- kill -9 <PID>
 	'''
 	global ROOT_DIRECTORY;
+	# '''
+	try:
+		print("Total browsermobproxy instances currently running:")
+		os.system("ps -aux | grep browsermob | wc -l")
+		os.system("ps -eo etimes,pid,args --sort=-start_time | grep browsermob | awk '{print $2}' | sudo xargs kill")
+		print("Total browsermobproxy instances currently running:")
+		os.system("ps -aux | grep browsermob | wc -l")
+		print("Killed all the zombie instances of browsermobproxy from previous visit!")
+		for proc in psutil.process_iter():
+			if proc.name() == "browsermob-proxy":
+				proc.kill()
+	except:
+		pass
+	try:
+		from signal import SIGTERM # or SIGKILL
+		for proc in process_iter():
+			for conns in proc.connections(kind='inet'):
+				if conns.laddr.port == 8022:
+					proc.send_signal(SIGTERM)
+	except:
+		pass
+	# '''
+	try:
+		proxy.close()
+	except:
+		pass
+	try:
+		server.close()
+	except:
+		pass
 	try:
 		server = Server(os.path.join(ROOT_DIRECTORY, "data", "browsermob-proxy-2.1.4", "bin", "browsermob-proxy"), options={'port': port})
 		server.start()
+		sleep(10)
 		proxy = server.create_proxy()
 	except BaseException as error:
 		print("\nAn exception occurred:", traceback.format_exc(), "in configureProxy()")
@@ -121,13 +166,28 @@ def configureProxy(port, profile_name, profile_dir):
 	return server, proxy, chrome_options
 
 
+def killBrowermobproxyInstances():
+	for process in psutil.process_iter():
+		try:
+			process_info = process.as_dict(attrs=['name', 'cmdline'])
+			if process_info.get('name') in ('java', 'java.exe'):
+				for cmd_info in process_info.get('cmdline'):
+					if cmd_info == '-Dapp.name=browsermob-proxy':
+						process.kill()
+		except psutil.NoSuchProcess:
+			pass
+	return
+
+
 def main(args):
 
-	global ROOT_DIRECTORY;
+	global ROOT_DIRECTORY, DOCKER;
 
 	profile = args.profile
 	proxy_port = args.proxyport
 	chrome_profile_dir = args.chromedatadir.replace("Default", profile)
+	if DOCKER:
+		ROOT_DIRECTORY = args.mountpath
 	
 
 	# Reading Top 104 Header Bidding supported websites
@@ -154,6 +214,14 @@ def main(args):
 		# Start the proxy server to facilitate capturing HAR file
 		server, proxy, chrome_options = configureProxy(proxy_port, profile, chrome_profile_dir)
 		if server is None:
+			# try:
+			# 	proxy.close()
+			# except:
+			# 	pass
+			try:
+				server.close()
+			except:
+				pass
 			logger.write("Server issue while its initialization.")
 			continue
 		logger.write("\nBrowsermob-proxy successfully configured for domain: {} | {}!".format(hb_domain, profile))
@@ -166,7 +234,9 @@ def main(args):
 			driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 		except BaseException as error:
 			# print("\nAn exception occurred:", traceback.format_exc(), "while initializing the webdriver for domain:", hb_domain)
+			# proxy.close()
 			server.stop()
+			killBrowermobproxyInstances()
 			logger.write("\n[ERROR] main()::Webdriver-Intitialization: {} for domain: {} | {}".format(str(traceback.format_exc()), hb_domain, profile))
 			continue
 		logger.write("\nChromedriver successfully loaded!")
@@ -193,7 +263,9 @@ def main(args):
 			logger.write("\n[ERROR] main()::ad-crawler: {}\nException occurred while getting the domain: {} | {}.".format(str(traceback.format_exc()), hb_domain, profile))
 			try:
 				driver.quit()
+				# proxy.close()
 				server.stop()
+				killBrowermobproxyInstances()
 			except:
 				print("\n[ERROR] main()::Webdriver-Intitialization: {}".format(str(traceback.format_exc())))
 				logger.write("\n[ERROR] main()::Webdriver-Intitialization: {} for domain: {} | {}".format(str(traceback.format_exc()), hb_domain, profile))
@@ -275,7 +347,8 @@ def main(args):
 		if not(os.path.exists(ad_path)):
 			os.makedirs(ad_path)
 
-		ad_object = AdCollector(profile, hb_domain, hb_rank, rules, ad_path, logger)
+		EASYLIST_DIR = os.path.join(ROOT_DIRECTORY, "data", "EasyList")
+		ad_object = AdCollector(profile, hb_domain, hb_rank, rules, ad_path, EASYLIST_DIR, logger)
 		ad_object.collectAds(driver)
 		print("Ad collection complete!")
 
@@ -314,8 +387,10 @@ def main(args):
 		logger.write("\nTotal time to crawl domain: {} is {}\n".format(hb_domain, total_time))
 
 
+		# proxy.close()
 		server.stop()
 		driver.quit()
+		killBrowermobproxyInstances()
 
 		# End
 

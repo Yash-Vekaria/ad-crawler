@@ -3,6 +3,12 @@ __pycache__/
 tmp/
 output/
 consent-extension/
+.config/
+.git/
+.local/
+.pki/
+.wdm/
+.cache/
 
 
 # Files to ignore
@@ -14,7 +20,10 @@ crawler.py
 
 # Ignored website: Not supported for UK
 # 188,tds.net,True
+# 1002,inc.com,True (CAPTCHA)
 # 1349,gda.pl,True
+# 1363,realtor.com,True (CAPTCHA)
+# 1398,chron.com,True (CAPTCHA)
 # 1672,iheart.com,True
 # 1678,nydailynews.com,True
 # 1684,vnexpress.net,True
