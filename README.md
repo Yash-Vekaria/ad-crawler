@@ -65,7 +65,8 @@ Follow the steps below to perform crawls using a docker:<br>
 
 7. Run the docker container:<br>
    ```
-   docker run -d -e PYTHONUNBUFFERED=1 -v <ad-crawler-dir>:/root -v <user-profile-dir>:/profile -p <random-unused-port>:<rfbport> --shm-size=10g <docker-image> python3.11 ad-crawler.py -p "<profile-name>" -px <proxy-port> -c "/profile" -mp "/root"```<br>
+   docker run -d -e PYTHONUNBUFFERED=1 -v <ad-crawler-dir>:/root -v <user-profile-dir>:/profile -p <random-unused-port>:<rfbport> --shm-size=10g <docker-image> python3.11 ad-crawler.py -p "<profile-name>" -px <proxy-port> -c "/profile" -mp "/root"
+   ```<br>
    Example:<br>
    ```
    docker run -d -e PYTHONUNBUFFERED=1 -v $(pwd):/root -v /home/yvekaria/.config/google-chrome/Test:/profile -p 20000:1212 --shm-size=10g ad-crawler python3.11 ad-crawler.py -p "Test" -px 8022 -c "/home/yvekaria/.config/google-chrome/Test" -mp "/root"```<br>
