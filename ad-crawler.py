@@ -38,17 +38,13 @@ ROOT_DIRECTORY = os.getcwd()
 
 def parseArguments():
 	global ROOT_DIRECTORY;
-	# python3 ad-crawler.py --profile="Test" --proxyport=8022 --chromedatadir="/home/yvekaria/.config/google-chrome/ProfileTest"
+	# Example: python3 ad-crawler.py --profile="Test" --proxyport=8022 --chromedatadir="/home/yvekaria/.config/google-chrome/ProfileTest"
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-p", "--profile", type=str, required=True, help="Enter the type of profile being crawled. Valid inputs are ['TV-Blank', 'TV-Trained', 'HB-Checker']")
 	parser.add_argument("-px", "--proxyport", type=int, required=True, help="Enter the port on which browsermob-proxy is to be run.")
 	parser.add_argument("-c", "--chromedatadir", type=str, required=True, help="Enter the Chrome's data directory path: Open Chrome's latest stable version installed => Type chrome://version => Input 'Profile Path' without")
 	if DOCKER:
-		# docker build -t ad-crawler .
-		# docker container ls -a | grep ad-crawler
-		# docker container logs -f <container-id>
-		# docker rm -f <container-id>
-		# docker run -d -e PYTHONUNBUFFERED=1 -v $(pwd):/root -v /home/yvekaria/.config/google-chrome/Test:/profile -p 20000:1212 --shm-size=10g ad-crawler python3.11 ad-crawler.py -p "Test" -px 8022 -c "/home/yvekaria/.config/google-chrome/Test" -mp "/root"
+		# Example docker run -d -e PYTHONUNBUFFERED=1 -v $(pwd):/root -v /home/yvekaria/.config/google-chrome/Test:/profile -p 20000:1212 --shm-size=10g ad-crawler python3.11 ad-crawler.py -p "Test" -px 8022 -c "/home/yvekaria/.config/google-chrome/Test" -mp "/root"
 		parser.add_argument("-mp", "--mountpath", type=str, required=False, help="Mounted path from docker run command")
 	args = parser.parse_args()
 	return args
@@ -66,15 +62,15 @@ def getChromeOptionsObject():
 	chrome_options = Options()
 	chrome_options.binary_location = "/usr/bin/google-chrome-stable" 
 	# chrome_options.add_argument("--headless")
-	chrome_options.add_argument("--no-sandbox")
-	chrome_options.add_argument("--disable-dev-shm-usage")
-	chrome_options.add_argument("--remote-debugging-port=9222") #new
-	chrome_options.add_argument("--window-size=1536,864")
-	chrome_options.add_argument("--start-maximized")
 	# chrome_options.add_argument("--disable-gpu")
 	# chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
 	# chrome_options.add_experimental_option('useAutomationExtension', False)
-	chrome_options.add_argument("--disable-infobars") #new
+	chrome_options.add_argument("--no-sandbox")
+	chrome_options.add_argument("--disable-dev-shm-usage")
+	chrome_options.add_argument("--remote-debugging-port=9222")
+	chrome_options.add_argument("--window-size=1536,864")
+	chrome_options.add_argument("--start-maximized")
+	chrome_options.add_argument("--disable-infobars")
 	chrome_options.add_argument("--disable-notifications")
 	chrome_options.add_argument("--disable-popup-blocking")
 	chrome_options.add_argument("--ignore-certificate-errors")
@@ -112,13 +108,11 @@ def configureProxy(port, profile_name, profile_dir):
 		- kill -9 <PID>
 	'''
 	global ROOT_DIRECTORY;
-	# '''
+	
 	try:
-		print("Total browsermobproxy instances currently running:")
-		os.system("ps -aux | grep browsermob | wc -l")
+		print("Total browsermobproxy instances currently running:", os.system("ps -aux | grep browsermob | wc -l"))
 		os.system("ps -eo etimes,pid,args --sort=-start_time | grep browsermob | awk '{print $2}' | sudo xargs kill")
-		print("Total browsermobproxy instances currently running:")
-		os.system("ps -aux | grep browsermob | wc -l")
+		print("Total browsermobproxy instances currently running:", os.system("ps -aux | grep browsermob | wc -l"))
 		print("Killed all the zombie instances of browsermobproxy from previous visit!")
 		for proc in psutil.process_iter():
 			if proc.name() == "browsermob-proxy":
@@ -133,7 +127,7 @@ def configureProxy(port, profile_name, profile_dir):
 					proc.send_signal(SIGTERM)
 	except:
 		pass
-	# '''
+	
 	try:
 		proxy.close()
 	except:
@@ -214,10 +208,10 @@ def main(args):
 		# Start the proxy server to facilitate capturing HAR file
 		server, proxy, chrome_options = configureProxy(proxy_port, profile, chrome_profile_dir)
 		if server is None:
-			# try:
-			# 	proxy.close()
-			# except:
-			# 	pass
+			try:
+				proxy.close()
+			except:
+				pass
 			try:
 				server.close()
 			except:
@@ -233,8 +227,7 @@ def main(args):
 			# driver = uc.Chrome(service=Service(ChromeDriverManager().install()), version_main=114, options=chrome_options) #executable_path=‘chromedriver’
 			driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 		except BaseException as error:
-			# print("\nAn exception occurred:", traceback.format_exc(), "while initializing the webdriver for domain:", hb_domain)
-			# proxy.close()
+			proxy.close()
 			server.stop()
 			killBrowermobproxyInstances()
 			logger.write("\n[ERROR] main()::Webdriver-Intitialization: {} for domain: {} | {}".format(str(traceback.format_exc()), hb_domain, profile))
@@ -263,7 +256,7 @@ def main(args):
 			logger.write("\n[ERROR] main()::ad-crawler: {}\nException occurred while getting the domain: {} | {}.".format(str(traceback.format_exc()), hb_domain, profile))
 			try:
 				driver.quit()
-				# proxy.close()
+				proxy.close()
 				server.stop()
 				killBrowermobproxyInstances()
 			except:
@@ -387,7 +380,7 @@ def main(args):
 		logger.write("\nTotal time to crawl domain: {} is {}\n".format(hb_domain, total_time))
 
 
-		# proxy.close()
+		proxy.close()
 		server.stop()
 		driver.quit()
 		killBrowermobproxyInstances()
