@@ -48,9 +48,10 @@ A repository to crawl the bids, advertisers, and ads on websites.
 ### To crawl inside a docker container
 
 Follow the steps below to perform crawls using a docker:<br>
-(The steps are highlighted for Ubuntu/Linux, but can be repeated for other OS as well)
+(The steps 1 & 2 are highlighted for Ubuntu/Linux, but can be performed for other OS as well)
 
-1. Check OS requirements and unistall any previous versions from [here](https://docs.docker.com/engine/install/ubuntu/).
+1. Check OS requirements and unistall any previous docker versions (if any):<br> 
+   [https://docs.docker.com/engine/install/ubuntu/](https://docs.docker.com/engine/install/ubuntu/).
 
 2. Follow the [manual installation method](https://docs.docker.com/engine/install/ubuntu/#install-from-a-package) or any other method from the above page to install docker on your local system.
 
