@@ -58,19 +58,21 @@ Follow the steps below to perform crawls using a docker:<br>
 
 5. Build the docker using the command:<br>
    `docker build -t <docker-image>`<br>
-   Example: `docker build -t ad-crawler`
+   Example:<br>
+   `docker build -t ad-crawler`
 
-6. Run the docker container:<br>
+7. Run the docker container:<br>
    `docker run -d -e PYTHONUNBUFFERED=1 -v <ad-crawler-dir>:/root -v <user-profile-dir>:/profile -p <random-unused-port>:<rfbport> --shm-size=10g <docker-image> python3.11 ad-crawler.py -p "<profile-name>" -px <proxy-port> -c "/profile" -mp "/root"`<br>
-   Example: `docker run -d -e PYTHONUNBUFFERED=1 -v $(pwd):/root -v /home/yvekaria/.config/google-chrome/Test:/profile -p 20000:1212 --shm-size=10g ad-crawler python3.11 ad-crawler.py -p "Test" -px 8022 -c "/home/yvekaria/.config/google-chrome/Test" -mp "/root"`<br>
+   Example:<br>
+   `docker run -d -e PYTHONUNBUFFERED=1 -v $(pwd):/root -v /home/yvekaria/.config/google-chrome/Test:/profile -p 20000:1212 --shm-size=10g ad-crawler python3.11 ad-crawler.py -p "Test" -px 8022 -c "/home/yvekaria/.config/google-chrome/Test" -mp "/root"`<br>
 Here, `rfbport` is also a random available port whole value should match the value used in `ad-crawler.py`.
 
-7. The flag `-d` in 6. enables docker container to run in a detached mode from the terminal. To prevent that remove `-d`.
+8. The flag `-d` in 6. enables docker container to run in a detached mode from the terminal. To prevent that remove `-d`.
 
-8. To monitor the running docker container use the following commands:<br>
+9. To monitor the running docker container use the following commands:<br>
    - To check status: `docker container ls -a | grep <docker-image>`<br>
    - To check logs: `docker container logs -f <container-id>`<br>
-   - To delete a docker container: docker rm -f <container-id>
+   - To delete a docker container: `docker rm -f <container-id>`<br>
 
 
 Please contact `yvekaria@ucdavis.edu` in case of any questions.
