@@ -1,6 +1,7 @@
 # ad-crawler
 A repository to crawl the bids, advertisers, and ads on websites.
 
+<hr />
 
 ### Steps to setup Crawler
 
@@ -41,7 +42,8 @@ A repository to crawl the bids, advertisers, and ads on websites.
    - `profile-name` is output directory name for current set of crawls. It could be the kind of persona being crawled for instance `Trained-TV` or `Untrained-TV`
    - `proxy-port` is any available port on your system that can be used by browsermobproxy for capturing HAR
    - `user-profile-dir` represent path to Google Chrome's user data directory that stores all the stateful information about the current persona being used like cookies, browsing history, etc. You should first create a blank user data directory and use it to login to the TV account through their website and then save the logged in profile in this user data directory. The directory containing this logged in information can here in future when crawling ads at the end of different stages of experimentation. To figure out the default user data directory of chrome on your system, enter `chrome://version/` in the chrome browser search bar and look for `Profile Path:`.
-   
+
+<hr />
 
 ### To crawl inside a docker container
 
@@ -62,17 +64,22 @@ Follow the steps below to perform crawls using a docker:<br>
    `docker build -t ad-crawler`
 
 7. Run the docker container:<br>
-   `docker run -d -e PYTHONUNBUFFERED=1 -v <ad-crawler-dir>:/root -v <user-profile-dir>:/profile -p <random-unused-port>:<rfbport> --shm-size=10g <docker-image> python3.11 ad-crawler.py -p "<profile-name>" -px <proxy-port> -c "/profile" -mp "/root"`<br>
+   ```
+   docker run -d -e PYTHONUNBUFFERED=1 -v <ad-crawler-dir>:/root -v <user-profile-dir>:/profile -p <random-unused-port>:<rfbport> --shm-size=10g <docker-image> python3.11 ad-crawler.py -p "<profile-name>" -px <proxy-port> -c "/profile" -mp "/root"
+   ```<br>
    Example:<br>
-   `docker run -d -e PYTHONUNBUFFERED=1 -v $(pwd):/root -v /home/yvekaria/.config/google-chrome/Test:/profile -p 20000:1212 --shm-size=10g ad-crawler python3.11 ad-crawler.py -p "Test" -px 8022 -c "/home/yvekaria/.config/google-chrome/Test" -mp "/root"`<br>
+   ```
+   docker run -d -e PYTHONUNBUFFERED=1 -v $(pwd):/root -v /home/yvekaria/.config/google-chrome/Test:/profile -p 20000:1212 --shm-size=10g ad-crawler python3.11 ad-crawler.py -p "Test" -px 8022 -c "/home/yvekaria/.config/google-chrome/Test" -mp "/root"
+   ```<br>
 Here, `rfbport` is also a random available port whole value should match the value used in `ad-crawler.py`.
 
-8. The flag `-d` in 6. enables docker container to run in a detached mode from the terminal. To prevent that remove `-d`.
+9. The flag `-d` in 6. enables docker container to run in a detached mode from the terminal. To prevent that remove `-d`.
 
-9. To monitor the running docker container use the following commands:<br>
+10. To monitor the running docker container use the following commands:<br>
    - To check status: `docker container ls -a | grep <docker-image>`<br>
    - To check logs: `docker container logs -f <container-id>`<br>
    - To delete a docker container: `docker rm -f <container-id>`<br>
 
+<hr />
 
 Please contact `yvekaria@ucdavis.edu` in case of any questions.
