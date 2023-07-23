@@ -45,7 +45,7 @@ A repository to crawl the bids, advertisers, and ads on websites.
 
 ### To crawl inside a docker container
 
-Follow the steps below to perform crawls using a docker: 
+Follow the steps below to perform crawls using a docker:<br>
 (The steps are highlighted for Ubuntu/Linux, but can be repeated for other OS as well)
 
 1. Check OS requirements and unistall any previous versions from [here](https://docs.docker.com/engine/install/ubuntu/).
@@ -56,20 +56,21 @@ Follow the steps below to perform crawls using a docker:
 
 4. Follow steps 1, 2, 5, 6, and 7 from the above normal crawling steps.
 
-5. Build the docker using the command:
-   `docker build -t <docker-image>`
+5. Build the docker using the command:<br>
+   `docker build -t <docker-image>`<br>
    Example: `docker build -t ad-crawler`
 
-6. Run the docker container:
-   `docker run -d -e PYTHONUNBUFFERED=1 -v <ad-crawler-dir>:/root -v <user-profile-dir>:/profile -p <random-unused-port>:<rfbport> --shm-size=10g <docker-image> python3.11 ad-crawler.py -p "<profile-name>" -px <proxy-port> -c "/profile" -mp "/root"
-   Example: `docker run -d -e PYTHONUNBUFFERED=1 -v $(pwd):/root -v /home/yvekaria/.config/google-chrome/Test:/profile -p 20000:1212 --shm-size=10g ad-crawler python3.11 ad-crawler.py -p "Test" -px 8022 -c "/home/yvekaria/.config/google-chrome/Test" -mp "/root"`
+6. Run the docker container:<br>
+   `docker run -d -e PYTHONUNBUFFERED=1 -v <ad-crawler-dir>:/root -v <user-profile-dir>:/profile -p <random-unused-port>:<rfbport> --shm-size=10g <docker-image> python3.11 ad-crawler.py -p "<profile-name>" -px <proxy-port> -c "/profile" -mp "/root"`<br>
+   Example: `docker run -d -e PYTHONUNBUFFERED=1 -v $(pwd):/root -v /home/yvekaria/.config/google-chrome/Test:/profile -p 20000:1212 --shm-size=10g ad-crawler python3.11 ad-crawler.py -p "Test" -px 8022 -c "/home/yvekaria/.config/google-chrome/Test" -mp "/root"`<br>
 Here, `rfbport` is also a random available port whole value should match the value used in `ad-crawler.py`.
 
 7. The flag `-d` in 6. enables docker container to run in a detached mode from the terminal. To prevent that remove `-d`.
 
-8. To monitor the running docker container use the following commands:
-   - To check status: `docker container ls -a | grep <docker-image>`
-   - To check logs: `docker container logs -f <container-id>`
+8. To monitor the running docker container use the following commands:<br>
+   - To check status: `docker container ls -a | grep <docker-image>`<br>
+   - To check logs: `docker container logs -f <container-id>`<br>
    - To delete a docker container: docker rm -f <container-id>
+
 
 Please contact `yvekaria@ucdavis.edu` in case of any questions.
