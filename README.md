@@ -73,7 +73,7 @@ Follow the steps below to perform crawls using a docker:<br>
    ```
    Here, `rfbport` is also a random available port whole value should match the value used in `ad-crawler.py`.
 
-9. The flag `-d` in 6. enables docker container to run in a detached mode from the terminal. To prevent that remove `-d`.
+9. The flag `-d` in point 6. enables docker container to run in a detached mode from the terminal. To prevent that remove `-d`.
 
 10. To monitor the running docker container use the following commands:<br>
       - To check status: `docker container ls -a | grep <docker-image>`<br>
