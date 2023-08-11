@@ -26,6 +26,8 @@ class BidParser():
 		
 		with open(output_filepath, "w") as csvfile:
 			csvwriter = csv.writer(csvfile)
+			header = ["Profile", "HBPublisherDomain", "AdId", "AdSize", "CreativeId", "AuctionId", "DealId", "Bidder", "CPM", "BidFloorValue", "BidCurrency", "AdvertiserId", "AdvertiserDomain"]
+			csvwriter.writerow(header)
 			for site_dir in os.listdir(crawl_dir):
 				bid_file_path = os.path.join(crawl_dir, site_dir, "{}_bids.json".format(site_dir))
 				if not(os.path.exists(bid_file_path)):
