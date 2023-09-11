@@ -342,7 +342,7 @@ def main(args):
 				os.makedirs(ad_path)
 	
 			EASYLIST_DIR = os.path.join(ROOT_DIRECTORY, "data", "EasyList")
-			ad_object = AdCollector(profile, hb_domain, hb_rank, rules, ad_path, EASYLIST_DIR, logger)
+			ad_object = AdCollector(profile, iteration, hb_domain, hb_rank, rules, ad_path, EASYLIST_DIR, logger)
 			ad_object.collectAds(driver)
 			print("Ad collection complete!")
 	
