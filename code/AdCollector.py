@@ -14,7 +14,7 @@ import os
 
 class AdCollector():
 	
-	def __init__(self, profile, site, tranco_rank, filter_rules, ads_output_path, easylist_dir, logger) -> None:
+	def __init__(self, profile, iteration, site, tranco_rank, filter_rules, ads_output_path, easylist_dir, logger) -> None:
 		self.profile = profile
 		self.site = site
 		self.tranco_rank = tranco_rank
@@ -22,6 +22,7 @@ class AdCollector():
 		self.ads_output_path = ads_output_path
 		self.ad_url_classifocation = {}
 		self.logger = logger
+		self.iteration = iteration
 		self.easylist_rules = self.setupEasyList(easylist_dir)
 
 
@@ -59,7 +60,7 @@ class AdCollector():
 				rules = [x.strip() for x in rules]
 			f.close()
 		except:
-			self.logger.write("\n[ERROR] setupEasyList()::AdCollector: {}\nException occured while reading filter_rules for domain: {} | {}".format(str(traceback.format_exc()), self.site, self.profile))
+			self.logger.write("\n[ERROR] setupEasyList()::AdCollector: {}\nException occured while reading filter_rules for domain: {} in Iteration: {} | {}".format(str(traceback.format_exc()), self.site, self.iteration, self.profile))
 			rules = []
 		
 		rule_dict = {}
@@ -270,9 +271,9 @@ class AdCollector():
 					self.logger.write("\n[ERROR] collectAds()::AdCollector: {}\nException occured in CSS ad collection for domain: {} | {}".format(str(traceback.format_exc()), self.site, self.profile))
 					# print('Exception while matching CSS', str(exc))
 					pass
-			self.logger.write("\nCSS ads collected for domain: {} | {}".format(self.site, self.profile))
+			self.logger.write("\nCSS ads collected for domain: {} in Iteration: {} | {}".format(self.site, self.iteration, self.profile))
 		except BaseException as e:
-			self.logger.write("\nCSS ad collection failure: {} for domain: {} | {}".format(str(traceback.format_exc()), self.site, self.profile))
+			self.logger.write("\nCSS ad collection failure: {} for domain: {} in Iteration: () | {}".format(str(traceback.format_exc()), self.site, self.iteration, self.profile))
 			pass
 		try:
 			webdriver.execute_script("window.scrollTo(0, 0);")
@@ -314,9 +315,9 @@ class AdCollector():
 					self.logger.write("\n[ERROR] collectAds()::AdCollector: {}\nException occured in iframe ad collection for domain: {} | {}".format(str(traceback.format_exc()), self.site, self.profile))
 					# print('Exception while matching iframes', str(exc))
 					pass
-			self.logger.write("\nIframe ads collected for domain: {} | {}".format(self.site, self.profile))
+			self.logger.write("\nIframe ads collected for domain: {} in Iteration: {} | {}".format(self.site, self.iteration, self.profile))
 		except BaseException as e:
-			self.logger.write("\nIframe ad collection failure: {} for domain: {} | {}".format(str(traceback.format_exc()), self.site, self.profile))
+			self.logger.write("\nIframe ad collection failure: {} for domain: {} in Iteration: {} | {}".format(str(traceback.format_exc()), self.site, self.iteration, self.profile))
 			pass
 		try:
 			webdriver.execute_script("window.scrollTo(0, 0);")
