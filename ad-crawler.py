@@ -188,204 +188,205 @@ def main(args):
 	# hb_dict stores mapping of hb_domain to hb_rank (tranco_rank)
 	hb_dict = readHeaderBiddingSites()
 
-	for idx, (hb_domain, hb_rank) in enumerate(hb_dict.items()):
-
-		start_time = time.time()
-		print("\n\nStarting to crawl:", idx, hb_domain, hb_rank)
-
-		experimental_path = os.path.join(ROOT_DIRECTORY, "output", profile, hb_domain)
-		if not(os.path.exists(experimental_path)):
-			os.makedirs(experimental_path)
-
-
-		# Log issues and crawl progress in this file
-		logger = open(os.path.join(experimental_path, str(hb_domain)+"_logs.txt"), "w")
-		ct = datetime.datetime.now()
-		logger.write("\n\nCrawl Start Time: {} [TS:{}] [{}]".format(ct, ct.timestamp(), hb_domain))
-		print("Error logging started ...")
-
-
-		# Start the proxy server to facilitate capturing HAR file
-		server, proxy, chrome_options = configureProxy(proxy_port, profile, chrome_profile_dir)
-		if server is None:
+	for iteration in [1, 2, 3]:
+		for idx, (hb_domain, hb_rank) in enumerate(hb_dict.items()):
+	
+			start_time = time.time()
+			print("\n\nStarting to crawl:", iteration, idx, hb_domain, hb_rank)
+	
+			experimental_path = os.path.join(ROOT_DIRECTORY, "output", profile, str(hb_domain)+"_"+str(iteration))
+			if not(os.path.exists(experimental_path)):
+				os.makedirs(experimental_path)
+	
+	
+			# Log issues and crawl progress in this file
+			logger = open(os.path.join(experimental_path, str(hb_domain)+"_"+str(iteration)+"_logs.txt"), "w")
+			ct = datetime.datetime.now()
+			logger.write("\n\nCrawl {} Start Time: {} [TS:{}] [{}]".format(iteration, ct, ct.timestamp(), hb_domain))
+			print("Error logging started ...")
+	
+	
+			# Start the proxy server to facilitate capturing HAR file
+			server, proxy, chrome_options = configureProxy(proxy_port, profile, chrome_profile_dir)
+			if server is None:
+				try:
+					proxy.close()
+				except:
+					pass
+				try:
+					server.close()
+				except:
+					pass
+				logger.write("Server issue while its initialization.")
+				continue
+			logger.write("\nBrowsermob-proxy successfully configured for domain: {} | {}!".format(hb_domain, profile))
+			print("\nBrowsermob-proxy successfully configured for domain: {} | {}!!".format(hb_domain, profile))
+			
+	
+			# Start the chromedriver instance
 			try:
-				proxy.close()
-			except:
-				pass
-			try:
-				server.close()
-			except:
-				pass
-			logger.write("Server issue while its initialization.")
-			continue
-		logger.write("\nBrowsermob-proxy successfully configured for domain: {} | {}!".format(hb_domain, profile))
-		print("\nBrowsermob-proxy successfully configured for domain: {} | {}!!".format(hb_domain, profile))
-		
-
-		# Start the chromedriver instance
-		try:
-			# driver = uc.Chrome(service=Service(ChromeDriverManager().install()), version_main=114, options=chrome_options) #executable_path=‘chromedriver’
-			driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
-		except BaseException as error:
-			proxy.close()
-			server.stop()
-			killBrowermobproxyInstances()
-			logger.write("\n[ERROR] main()::Webdriver-Intitialization: {} for domain: {} | {}".format(str(traceback.format_exc()), hb_domain, profile))
-			continue
-		logger.write("\nChromedriver successfully loaded!")
-		print("\nChromedriver successfully loaded!")
-
-
-		# Start capturing HAR
-		har_filepath = os.path.join(experimental_path, str(hb_domain)+"_har.json")
-		try:
-			proxy.new_har(har_filepath, options={'captureHeaders': True,'captureContent':True})
-		except BaseException as error:
-			logger.write("\n[ERROR] main()::HarCaptureStart: {}\n for domain: {} | {}".format(str(traceback.format_exc()), hb_domain, profile))
-			pass
-		logger.write("\nHAR capture started!")
-		print("Starting HAR Capture")
-
-
-		# Visit the current domain
-		website = "http://" + str(hb_domain)
-		try:
-			print("Website:", website)
-			driver.get(website)
-		except BaseException as e:
-			logger.write("\n[ERROR] main()::ad-crawler: {}\nException occurred while getting the domain: {} | {}.".format(str(traceback.format_exc()), hb_domain, profile))
-			try:
-				driver.quit()
+				# driver = uc.Chrome(service=Service(ChromeDriverManager().install()), version_main=114, options=chrome_options) #executable_path=‘chromedriver’
+				driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+			except BaseException as error:
 				proxy.close()
 				server.stop()
 				killBrowermobproxyInstances()
-			except:
-				print("\n[ERROR] main()::Webdriver-Intitialization: {}".format(str(traceback.format_exc())))
-				logger.write("\n[ERROR] main()::Webdriver-Intitialization: {} for domain: {} | {}".format(str(traceback.format_exc()), hb_domain, profile))
+				logger.write("\n[ERROR] main()::Webdriver-Intitialization: {} for domain: {} in Iteration: {} | {}".format(str(traceback.format_exc()), hb_domain, iteration, profile))
 				continue
+			logger.write("\nChromedriver successfully loaded!")
 			print("\nChromedriver successfully loaded!")
-			continue
-		# Wait for page to completely load
-		sleep(10)
-		print("Visiting and loading webpage ...")
-		logger.write("\nVisiting and loading webpage ...")
-
-
-		# Read custom popup handling rules
-		f = open(os.path.join(ROOT_DIRECTORY, "data", "custom-popup-xpaths.txt"), "r")
-		prules = f.read().split("\n")
-		f.close()
-		prule_dict = {prule.split(" | ")[0]: list(prule.split(" | ")[1:]) for prule in prules}
-
-
-		cpm = CustomPopupManager(hb_domain, prule_dict)
-		cpm.managePopups(driver)
-
-
-		cpm.acceptMissedConsents(driver)
-		logger.write("\nPopup-Consent-1 handled!")
-		exploreFullPage(driver)
-		logger.write("\nWebpage explored fully.")
-		cpm.acceptMissedConsents(driver)
-
-
-		cpm.managePopups(driver)
-		logger.write("\nPopup-Consent-2 handled!")
-
-		
-		# Read filterlist rules
-		f = open(os.path.join(ROOT_DIRECTORY, "data", "EasyList", "easylist.txt"), "r")
-		rules = f.read().split("\n")
-		f.close()
-		rules = [rule[2:] for rule in rules[18:] if rule.startswith("##")]
-
-
-		# Save DOM of the webpage
-		try:
-			dom_filepath = os.path.join(experimental_path, str(hb_domain)+"_DOM.html")
-			fdom = codecs.open(dom_filepath, "w", "utf−8")
-			fdom.write(driver.page_source)
-			fdom.close()
-			logger.write("\nDOM saved.")
-			print("DOM saved")
-		except BaseException as e:
-			print("\n[ERROR] DOM-Capture: {}".format(str(traceback.format_exc())))
-			logger.write("\n[ERROR] main()::DOM-Capture: {} for domain: {} | {}".format(str(traceback.format_exc()), hb_domain, profile))
-			pass
-
-
-		# Perform bid collection
-		bid_file_path = os.path.join(experimental_path, str(hb_domain)+"_bids.json")
-		bid_object = BidCollector(profile, hb_domain, hb_rank, bid_file_path)
-		bid_object.collectBids(driver, logger)
-		print("Bid data collected")
-		
-		
-		# Take fullpage screenshot of the webpage
-		screenshot_output_path = os.path.join(experimental_path, str(hb_domain)+"_ss-before.png")
-		ss_object = FullPageScreenshotCollector(profile, hb_domain, hb_rank, screenshot_output_path)
-		ss_object.captureFullScreenshot(driver, logger)
-		logger.write("\nFull page screnshot successfully captured.")
-		try:
-			driver.execute_script("window.scrollTo(0, 0);")
-		except:
-			pass
-		sleep(10)
-		print("Fullpage screenshot of the webpage captured")
-
-		
-		# Collect ads on the website
-		print("Starting to collect ads ...")
-		ad_path = os.path.join(experimental_path, "ads")
-		if not(os.path.exists(ad_path)):
-			os.makedirs(ad_path)
-
-		EASYLIST_DIR = os.path.join(ROOT_DIRECTORY, "data", "EasyList")
-		ad_object = AdCollector(profile, hb_domain, hb_rank, rules, ad_path, EASYLIST_DIR, logger)
-		ad_object.collectAds(driver)
-		print("Ad collection complete!")
-
-
-		# Take fullpage screenshot of the webpage
-		screenshot_output_path = os.path.join(experimental_path, str(hb_domain)+"_ss-after.png")
-		ss_object = FullPageScreenshotCollector(profile, hb_domain, hb_rank, screenshot_output_path)
-		status = ss_object.captureFullScreenshot(driver, logger)
-		if status:
+	
+	
+			# Start capturing HAR
+			har_filepath = os.path.join(experimental_path, str(hb_domain)+"_"+str(iteration)+"_har.json")
+			try:
+				proxy.new_har(har_filepath, options={'captureHeaders': True,'captureContent':True})
+			except BaseException as error:
+				logger.write("\n[ERROR] main()::HarCaptureStart: {}\n for domain: {} in Iteration: {} | {}".format(str(traceback.format_exc()), hb_domain, iteration, profile))
+				pass
+			logger.write("\nHAR capture started!")
+			print("Starting HAR Capture")
+	
+	
+			# Visit the current domain
+			website = "http://" + str(hb_domain)
+			try:
+				print("Website:", website)
+				driver.get(website)
+			except BaseException as e:
+				logger.write("\n[ERROR] main()::ad-crawler: {}\nException occurred while getting the domain: {} in Iteration: {} | {}.".format(str(traceback.format_exc()), hb_domain, iteration, profile))
+				try:
+					driver.quit()
+					proxy.close()
+					server.stop()
+					killBrowermobproxyInstances()
+				except:
+					print("\n[ERROR] main()::Webdriver-Intitialization: {}".format(str(traceback.format_exc())))
+					logger.write("\n[ERROR] main()::Webdriver-Intitialization: {} for domain: {} in Iteration: {}| {}".format(str(traceback.format_exc()), hb_domain, iteration, profile))
+					continue
+				print("\nChromedriver successfully loaded!")
+				continue
+			# Wait for page to completely load
+			sleep(10)
+			print("Visiting and loading webpage ...")
+			logger.write("\nVisiting and loading webpage ...")
+	
+	
+			# Read custom popup handling rules
+			f = open(os.path.join(ROOT_DIRECTORY, "data", "custom-popup-xpaths.txt"), "r")
+			prules = f.read().split("\n")
+			f.close()
+			prule_dict = {prule.split(" | ")[0]: list(prule.split(" | ")[1:]) for prule in prules}
+	
+	
+			cpm = CustomPopupManager(hb_domain, prule_dict)
+			cpm.managePopups(driver)
+	
+	
+			cpm.acceptMissedConsents(driver)
+			logger.write("\nPopup-Consent-1 handled!")
+			exploreFullPage(driver)
+			logger.write("\nWebpage explored fully.")
+			cpm.acceptMissedConsents(driver)
+	
+	
+			cpm.managePopups(driver)
+			logger.write("\nPopup-Consent-2 handled!")
+	
+			
+			# Read filterlist rules
+			f = open(os.path.join(ROOT_DIRECTORY, "data", "EasyList", "easylist.txt"), "r")
+			rules = f.read().split("\n")
+			f.close()
+			rules = [rule[2:] for rule in rules[18:] if rule.startswith("##")]
+	
+	
+			# Save DOM of the webpage
+			try:
+				dom_filepath = os.path.join(experimental_path, str(hb_domain)+"_"+str(iteration)+"_DOM.html")
+				fdom = codecs.open(dom_filepath, "w", "utf−8")
+				fdom.write(driver.page_source)
+				fdom.close()
+				logger.write("\nDOM saved.")
+				print("DOM saved")
+			except BaseException as e:
+				print("\n[ERROR] DOM-Capture: {}".format(str(traceback.format_exc())))
+				logger.write("\n[ERROR] main()::DOM-Capture: {} for domain: {} in iteration: {}| {}".format(str(traceback.format_exc()), hb_domain, iteration, profile))
+				pass
+	
+	
+			# Perform bid collection
+			bid_file_path = os.path.join(experimental_path, str(hb_domain)+"_"+str(iteration)+"_bids.json")
+			bid_object = BidCollector(profile, hb_domain, hb_rank, bid_file_path)
+			bid_object.collectBids(driver, logger)
+			print("Bid data collected")
+			
+			
+			# Take fullpage screenshot of the webpage
+			screenshot_output_path = os.path.join(experimental_path, str(hb_domain)+"_"+str(iteration)+"_ss-before.png")
+			ss_object = FullPageScreenshotCollector(profile, hb_domain, hb_rank, screenshot_output_path)
+			ss_object.captureFullScreenshot(driver, logger)
 			logger.write("\nFull page screnshot successfully captured.")
-		else:
-			logger.write("\n[ERROR] main()::FullPageScreenshotCollector: {}\nIssue in capturing full page screenshot for {} | {}.".format(str(traceback.format_exc()), hb_domain, profile))
-		# Move to the top and wait for dynamically updated ads to completely load
-		try:
-			driver.execute_script("window.scrollTo(0, 0);")
-		except:
-			pass
-		print("Fullpage screenshot of the webpage captured")
-
-
-		# Complete HAR Collection and save .har file
-		try:
-			with open(har_filepath, 'w') as fhar:
-				json.dump(proxy.har, fhar, indent=4)
-			fhar.close()
-			logger.write("\nHAR dump saved for domain: {} | {}".format(hb_domain, profile))
-		except BaseException as error:
-			logger.write("\n[ERROR] main()::HarWriter: {}\nException occured while dumping the HAR for domain: {} | {}".format(str(traceback.format_exc()), hb_domain, profile))
-			pass
-		print("Network traffic saved")
-
-
-		end_time = time.time()
-		total_time = end_time - start_time
-		print("Total time to crawl domain: {} is {}".format(hb_domain, total_time))
-		logger.write("\nTotal time to crawl domain: {} is {}\n".format(hb_domain, total_time))
-
-
-		proxy.close()
-		server.stop()
-		driver.quit()
-		killBrowermobproxyInstances()
-
-		# End
+			try:
+				driver.execute_script("window.scrollTo(0, 0);")
+			except:
+				pass
+			sleep(10)
+			print("Fullpage screenshot of the webpage captured")
+	
+			
+			# Collect ads on the website
+			print("Starting to collect ads ...")
+			ad_path = os.path.join(experimental_path, "ads")
+			if not(os.path.exists(ad_path)):
+				os.makedirs(ad_path)
+	
+			EASYLIST_DIR = os.path.join(ROOT_DIRECTORY, "data", "EasyList")
+			ad_object = AdCollector(profile, hb_domain, hb_rank, rules, ad_path, EASYLIST_DIR, logger)
+			ad_object.collectAds(driver)
+			print("Ad collection complete!")
+	
+	
+			# Take fullpage screenshot of the webpage
+			screenshot_output_path = os.path.join(experimental_path, str(hb_domain)+"_"+str(iteration)+"_ss-after.png")
+			ss_object = FullPageScreenshotCollector(profile, hb_domain, hb_rank, screenshot_output_path)
+			status = ss_object.captureFullScreenshot(driver, logger)
+			if status:
+				logger.write("\nFull page screnshot successfully captured.")
+			else:
+				logger.write("\n[ERROR] main()::FullPageScreenshotCollector: {}\nIssue in capturing full page screenshot for {} in Iteration: {} | {}.".format(str(traceback.format_exc()), hb_domain, iteration, profile))
+			# Move to the top and wait for dynamically updated ads to completely load
+			try:
+				driver.execute_script("window.scrollTo(0, 0);")
+			except:
+				pass
+			print("Fullpage screenshot of the webpage captured")
+	
+	
+			# Complete HAR Collection and save .har file
+			try:
+				with open(har_filepath, 'w') as fhar:
+					json.dump(proxy.har, fhar, indent=4)
+				fhar.close()
+				logger.write("\nHAR dump saved for domain: {} in Iteration: {} | {}".format(hb_domain, iteration, profile))
+			except BaseException as error:
+				logger.write("\n[ERROR] main()::HarWriter: {}\nException occured while dumping the HAR for domain: {} in Iteration: {} | {}".format(str(traceback.format_exc()), hb_domain, iteration, profile))
+				pass
+			print("Network traffic saved")
+	
+	
+			end_time = time.time()
+			total_time = end_time - start_time
+			print("Total time to crawl domain: {} in Iteration: {} is {}".format(hb_domain, iteration, total_time))
+			logger.write("\nTotal time to crawl domain: {} in Iteration: {} is {}\n".format(hb_domain, iteration, total_time))
+	
+	
+			proxy.close()
+			server.stop()
+			driver.quit()
+			killBrowermobproxyInstances()
+	
+			# End
 
 
 
