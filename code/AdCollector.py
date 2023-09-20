@@ -26,6 +26,11 @@ class AdCollector():
 		self.easylist_rules = self.setupEasyList(easylist_dir)
 
 
+	def write_byte_content(self, file_addr, list_content) -> None:
+		with open(file_addr, 'wb') as out_file:            
+			out_file.write(list_content)
+	
+	
 	def storeAdResponse(self, url, output_path):
 		if url.startswith('//'):
 			url = 'http:' + url
@@ -43,7 +48,7 @@ class AdCollector():
 			pass
 
 
-	def write_data(self, filepath, data) -> None:
+	def write_data(self, filepath, data):
 		with open(filepath, 'w') as out_file:
 			for item in data:
 				out_file.write(item + '\n')
