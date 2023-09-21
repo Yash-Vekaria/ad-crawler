@@ -26,7 +26,7 @@ class AdCollector():
 		self.easylist_rules = self.setupEasyList(easylist_dir)
 
 
-	def write_byte_content(self, file_addr, list_content) -> None:
+	def write_byte_content(self, file_addr, list_content):
 		with open(file_addr, 'wb') as out_file:            
 			out_file.write(list_content)
 	
