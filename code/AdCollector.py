@@ -31,7 +31,7 @@ class AdCollector():
 			out_file.write(list_content)
 	
 	
-	def storeAdResponse(self, url, output_path):
+	def storeAdResponse(self, url, write_addr):
 		if url.startswith('//'):
 			url = 'http:' + url
 			
