@@ -97,9 +97,24 @@ class BidCollector():
 				# print(self.tranco_rank, self.site, "False")
 				pass
 		except Exception as e:
-			logger.write("\n[ERROR] collectBids()::BidCollector: {}\nException occured in bid collection for domain: {} | {}".format(str(traceback.format_exc()), self.site, self.profile))
-			# print('EXCEPTION occured in bid collection:', str(e))
-			return
+			try:
+				webdriver.execute_script(GET_FORCED_CPM)
+				time.sleep(5)
+				bids = webdriver.execute_script(GET_FORCED_CPM_RETURN)
+				method = "FORCED" # These are the FORCED Bids
+				logger.write("\nFORCED Bids extracted for domain: {}".format(self.site, self.profile))
+				if len(bids) > 0:
+					# print(self.tranco_rank, self.site, "True")
+					self.bid_output_filepath = str(self.bid_output_filepath).replace("-bids", "-{}-bids".format(method))
+					self.saveBids(bids, logger)
+					logger.write("\nNORMAL Bids extracted for domain: {}".format(self.site, self.profile))
+				else:
+					# print(self.tranco_rank, self.site, "False")
+					pass
+			except:
+				logger.write("\n[ERROR] collectBids()::BidCollector: {}\nException occured in bid collection for domain: {} | {}".format(str(traceback.format_exc()), self.site, self.profile))
+				# print('EXCEPTION occured in bid collection:', str(e))
+				return
 
 		# print("Collected bids on {}".format(self.site))
 		logger.write("\nBid collection successfully completed for domain: {} | {}".format(self.site, self.profile))
