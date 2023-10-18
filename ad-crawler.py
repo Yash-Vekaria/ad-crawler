@@ -207,6 +207,7 @@ def main(args):
 	
 	
 			# Start the proxy server to facilitate capturing HAR file
+			current_time = time.time()
 			server, proxy, chrome_options = configureProxy(proxy_port, profile, chrome_profile_dir)
 			if server is None:
 				try:
@@ -219,11 +220,12 @@ def main(args):
 					pass
 				logger.write("Server issue while its initialization.")
 				continue
-			logger.write("\nBrowsermob-proxy successfully configured for domain: {} | {}!".format(hb_domain, profile))
+			logger.write("\nBrowsermob-proxy successfully configured for domain: {} | {}! [Time: {}]".format(hb_domain, profile, time.time()-current_time))
 			print("\nBrowsermob-proxy successfully configured for domain: {} | {}!!".format(hb_domain, profile))
 			
 	
 			# Start the chromedriver instance
+			current_time = time.time()
 			try:
 				# driver = uc.Chrome(service=Service(ChromeDriverManager().install()), version_main=114, options=chrome_options) #executable_path=‘chromedriver’
 				driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
@@ -231,30 +233,32 @@ def main(args):
 				proxy.close()
 				server.stop()
 				killBrowermobproxyInstances()
-				logger.write("\n[ERROR] main()::Webdriver-Intitialization: {} for domain: {} in Iteration: {} | {}".format(str(traceback.format_exc()), hb_domain, iteration, profile))
+				logger.write("\n[ERROR] main()::Webdriver-Intitialization: {} for domain: {} in Iteration: {} | {} [Time: {}]".format(str(traceback.format_exc()), hb_domain, iteration, profile, time.time()-current_time))
 				continue
-			logger.write("\nChromedriver successfully loaded!")
+			logger.write("\nChromedriver successfully loaded! [Time: {}]".format(time.time()-current_time))
 			print("\nChromedriver successfully loaded!")
 	
 	
 			# Start capturing HAR
+			current_time = time.time()
 			har_filepath = os.path.join(experimental_path, str(hb_domain)+"_"+str(iteration)+"_har.json")
 			try:
 				proxy.new_har(har_filepath, options={'captureHeaders': True,'captureContent':True})
 			except BaseException as error:
-				logger.write("\n[ERROR] main()::HarCaptureStart: {}\n for domain: {} in Iteration: {} | {}".format(str(traceback.format_exc()), hb_domain, iteration, profile))
+				logger.write("\n[ERROR] main()::HarCaptureStart: {}\n for domain: {} in Iteration: {} | {} [Time: {}]".format(str(traceback.format_exc()), hb_domain, iteration, profile, time.time()-current_time))
 				pass
-			logger.write("\nHAR capture started!")
+			logger.write("\nHAR capture started! [Time: {}]".format(time.time()-current_time))
 			print("Starting HAR Capture")
 	
 	
 			# Visit the current domain
+			current_time = time.time()
 			website = "http://" + str(hb_domain)
 			try:
 				print("Website:", website)
 				driver.get(website)
 			except BaseException as e:
-				logger.write("\n[ERROR] main()::ad-crawler: {}\nException occurred while getting the domain: {} in Iteration: {} | {}.".format(str(traceback.format_exc()), hb_domain, iteration, profile))
+				logger.write("\n[ERROR] main()::ad-crawler: {}\nException occurred while getting the domain: {} in Iteration: {} | {} [Time: {}]".format(str(traceback.format_exc()), hb_domain, iteration, profile, time.time()-current_time))
 				try:
 					driver.quit()
 					proxy.close()
@@ -262,17 +266,18 @@ def main(args):
 					killBrowermobproxyInstances()
 				except:
 					print("\n[ERROR] main()::Webdriver-Intitialization: {}".format(str(traceback.format_exc())))
-					logger.write("\n[ERROR] main()::Webdriver-Intitialization: {} for domain: {} in Iteration: {}| {}".format(str(traceback.format_exc()), hb_domain, iteration, profile))
+					logger.write("\n[ERROR] main()::Webdriver-Intitialization: {} for domain: {} in Iteration: {}| {} [Time: {}]".format(str(traceback.format_exc()), hb_domain, iteration, profile, time.time()-current_time))
 					continue
 				print("\nChromedriver successfully loaded!")
 				continue
 			# Wait for page to completely load
 			sleep(10)
 			print("Visiting and loading webpage ...")
-			logger.write("\nVisiting and loading webpage ...")
+			logger.write("\nVisiting and loading webpage ... [Time: {}]".format(time.time()-current_time))
 	
 	
 			# Read custom popup handling rules
+			current_time = time.time()
 			f = open(os.path.join(ROOT_DIRECTORY, "data", "custom-popup-xpaths.txt"), "r")
 			prules = f.read().split("\n")
 			f.close()
@@ -291,7 +296,7 @@ def main(args):
 	
 	
 			cpm.managePopups(driver)
-			logger.write("\nPopup-Consent-2 handled!")
+			logger.write("\nPopup-Consent-2 handled! [Time: {}]".format(time.time()-current_time))
 	
 			
 			# Read filterlist rules
@@ -302,16 +307,17 @@ def main(args):
 	
 	
 			# Save DOM of the webpage
+			current_time = time.time()
 			try:
 				dom_filepath = os.path.join(experimental_path, str(hb_domain)+"_"+str(iteration)+"_DOM.html")
 				fdom = codecs.open(dom_filepath, "w", "utf−8")
 				fdom.write(driver.page_source)
 				fdom.close()
-				logger.write("\nDOM saved.")
+				logger.write("\nDOM saved. [Time: {}]".format(time.time()-current_time))
 				print("DOM saved")
 			except BaseException as e:
 				print("\n[ERROR] DOM-Capture: {}".format(str(traceback.format_exc())))
-				logger.write("\n[ERROR] main()::DOM-Capture: {} for domain: {} in iteration: {}| {}".format(str(traceback.format_exc()), hb_domain, iteration, profile))
+				logger.write("\n[ERROR] main()::DOM-Capture: {} for domain: {} in iteration: {} | {} [Time: {}]".format(str(traceback.format_exc()), hb_domain, iteration, profile, time.time()-current_time))
 				pass
 	
 	
@@ -323,10 +329,11 @@ def main(args):
 			
 			
 			# Take fullpage screenshot of the webpage
+			current_time = time.time()
 			screenshot_output_path = os.path.join(experimental_path, str(hb_domain)+"_"+str(iteration)+"_ss-before.png")
 			ss_object = FullPageScreenshotCollector(profile, hb_domain, hb_rank, screenshot_output_path)
 			ss_object.captureFullScreenshot(driver, logger)
-			logger.write("\nFull page screnshot successfully captured.")
+			logger.write("\nFull page screnshot successfully captured. [Time: {}]".format(time.time()-current_time))
 			try:
 				driver.execute_script("window.scrollTo(0, 0);")
 			except:
@@ -348,13 +355,11 @@ def main(args):
 	
 	
 			# Take fullpage screenshot of the webpage
+			current_time = time.time()
 			screenshot_output_path = os.path.join(experimental_path, str(hb_domain)+"_"+str(iteration)+"_ss-after.png")
 			ss_object = FullPageScreenshotCollector(profile, hb_domain, hb_rank, screenshot_output_path)
-			status = ss_object.captureFullScreenshot(driver, logger)
-			if status:
-				logger.write("\nFull page screnshot successfully captured.")
-			else:
-				logger.write("\n[ERROR] main()::FullPageScreenshotCollector: {}\nIssue in capturing full page screenshot for {} in Iteration: {} | {}.".format(str(traceback.format_exc()), hb_domain, iteration, profile))
+			ss_object.captureFullScreenshot(driver, logger)
+			logger.write("\nFull page screnshot successfully captured. [Time: {}]".format(time.time()-current_time))
 			# Move to the top and wait for dynamically updated ads to completely load
 			try:
 				driver.execute_script("window.scrollTo(0, 0);")
@@ -364,13 +369,14 @@ def main(args):
 	
 	
 			# Complete HAR Collection and save .har file
+			current_time = time.time()
 			try:
 				with open(har_filepath, 'w') as fhar:
 					json.dump(proxy.har, fhar, indent=4)
 				fhar.close()
-				logger.write("\nHAR dump saved for domain: {} in Iteration: {} | {}".format(hb_domain, iteration, profile))
+				logger.write("\nHAR dump saved for domain: {} in Iteration: {} | {} [Time: {}]".format(hb_domain, iteration, profile, time.time()-current_time))
 			except BaseException as error:
-				logger.write("\n[ERROR] main()::HarWriter: {}\nException occured while dumping the HAR for domain: {} in Iteration: {} | {}".format(str(traceback.format_exc()), hb_domain, iteration, profile))
+				logger.write("\n[ERROR] main()::HarWriter: {}\nException occured while dumping the HAR for domain: {} in Iteration: {} | {} [Time: {}]".format(str(traceback.format_exc()), hb_domain, iteration, profile, time.time()-current_time))
 				pass
 			print("Network traffic saved")
 	
