@@ -32,6 +32,7 @@ class AdCollector():
 	
 	
 	def storeAdResponse(self, url, write_addr):
+		current_time = time.time()
 		if url.startswith('//'):
 			url = 'http:' + url
 			
@@ -43,7 +44,7 @@ class AdCollector():
 			curr_req_pickle = pickle.dumps(curr_req)
 			self.write_byte_content(write_addr, curr_req_pickle)
 		except Exception as ex:
-			self.logger.write("\n[ERROR] storeAdResponse()::AdCollector: {}\nException occured in storing ad response for domain: {} | {}".format(str(traceback.format_exc()), self.site, self.profile))
+			self.logger.write("\n[ERROR] storeAdResponse()::AdCollector: {}\nException occured in storing ad response for domain: {} | {} [Time: {}]".format(str(traceback.format_exc()), self.site, self.profile, time.time()-current_time))
 			# print('Exception while getting the ad response', ex) 
 			pass
 
@@ -243,6 +244,7 @@ class AdCollector():
 					f"return Array.from(ads);"
 
 		# ################# CSS MATCHING #################
+		current_time = time.time()
 		try:
 			matching_css_elements = webdriver.execute_script(js_script)
 			for idx, match in enumerate(matching_css_elements):
@@ -273,12 +275,12 @@ class AdCollector():
 				except Exception as exc:
 					if ("Cannot take screenshot with 0 width" in str(exc)) or ("Cannot take screenshot with 0 height" in str(exc)):
 						continue
-					self.logger.write("\n[ERROR] collectAds()::AdCollector: {}\nException occured in CSS ad collection for domain: {} | {}".format(str(traceback.format_exc()), self.site, self.profile))
+					self.logger.write("\n[ERROR] collectAds()::AdCollector: {}\nException occured in CSS ad collection for domain: {} | {} [Time: {}]".format(str(traceback.format_exc()), self.site, self.profile, , time.time()-current_time))
 					# print('Exception while matching CSS', str(exc))
 					pass
-			self.logger.write("\nCSS ads collected for domain: {} in Iteration: {} | {}".format(self.site, self.iteration, self.profile))
+			self.logger.write("\nCSS ads collected for domain: {} in Iteration: {} | {} [Time: {}]".format(self.site, self.iteration, self.profile, time.time()-current_time))
 		except BaseException as e:
-			self.logger.write("\nCSS ad collection failure: {} for domain: {} in Iteration: () | {}".format(str(traceback.format_exc()), self.site, self.iteration, self.profile))
+			self.logger.write("\nCSS ad collection failure: {} for domain: {} in Iteration: () | {} [Time: {}]".format(str(traceback.format_exc()), self.site, self.iteration, self.profile, time.time()-current_time))
 			pass
 		try:
 			webdriver.execute_script("window.scrollTo(0, 0);")
@@ -288,6 +290,7 @@ class AdCollector():
 
 
 		# ################# IFRAME MATCHING #################
+		current_time = time.time()
 		try:
 			iframe_elements = webdriver.find_elements(By.TAG_NAME, 'iframe')
 			for idx, iframe in enumerate(iframe_elements):
@@ -320,15 +323,16 @@ class AdCollector():
 					self.logger.write("\n[ERROR] collectAds()::AdCollector: {}\nException occured in iframe ad collection for domain: {} | {}".format(str(traceback.format_exc()), self.site, self.profile))
 					# print('Exception while matching iframes', str(exc))
 					pass
-			self.logger.write("\nIframe ads collected for domain: {} in Iteration: {} | {}".format(self.site, self.iteration, self.profile))
+			self.logger.write("\nIframe ads collected for domain: {} in Iteration: {} | {} [Time: {}]".format(self.site, self.iteration, self.profile, time.time()-current_time))
 		except BaseException as e:
-			self.logger.write("\nIframe ad collection failure: {} for domain: {} in Iteration: {} | {}".format(str(traceback.format_exc()), self.site, self.iteration, self.profile))
+			self.logger.write("\nIframe ad collection failure: {} for domain: {} in Iteration: {} | {} [Time: {}]".format(str(traceback.format_exc()), self.site, self.iteration, self.profile, time.time()-current_time))
 			pass
 		try:
 			webdriver.execute_script("window.scrollTo(0, 0);")
 		except:
 			pass
 
+		current_time = time.time()
 		try:
 			print("Succesfully captured " + str(len(css_source_matches)) + " CSS-based element screenshots out of " + str(len(matching_css_elements)))
 			print("Succesfully captured " + str(len(iframe_source_matches)) + " iframe-based screenshots out of " + str(len(iframe_elements)))
@@ -340,7 +344,7 @@ class AdCollector():
 			self.write_data(os.path.join(self.ads_output_path, '..', 'cssmatch_screenshot_logs_src.csv'), css_source_matches)
 			self.write_data(os.path.join(self.ads_output_path, '..', 'cssmatch_screenshot_logs_href.csv'), css_href_matches)
 		except BaseException as e:
-			self.logger.write("\nWriting ad output failure: {} for domain: {} | {}".format(str(traceback.format_exc()), self.site, self.profile))
+			self.logger.write("\nWriting ad output failure: {} for domain: {} | {} [Time: {}]".format(str(traceback.format_exc()), self.site, self.profile, time.time()-current_time))
 			pass
 
 		return
