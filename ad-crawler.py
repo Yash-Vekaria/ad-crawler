@@ -27,7 +27,7 @@ from CustomPopupManager import *
 from BidCollector import *
 from AdCollector import *
 
-DOCKER = False
+DOCKER = True
 if DOCKER:
 	from pyvirtualdisplay import Display
 	disp = Display(backend="xvnc", size=(1920,1080), rfbport=1212) # 1212 has to be a random port number
