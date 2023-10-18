@@ -275,7 +275,7 @@ class AdCollector():
 				except Exception as exc:
 					if ("Cannot take screenshot with 0 width" in str(exc)) or ("Cannot take screenshot with 0 height" in str(exc)):
 						continue
-					self.logger.write("\n[ERROR] collectAds()::AdCollector: {}\nException occured in CSS ad collection for domain: {} | {} [Time: {}]".format(str(traceback.format_exc()), self.site, self.profile, , time.time()-current_time))
+					self.logger.write("\n[ERROR] collectAds()::AdCollector: {}\nException occured in CSS ad collection for domain: {} | {} [Time: {}]".format(str(traceback.format_exc()), self.site, self.profile, time.time()-current_time))
 					# print('Exception while matching CSS', str(exc))
 					pass
 			self.logger.write("\nCSS ads collected for domain: {} in Iteration: {} | {} [Time: {}]".format(self.site, self.iteration, self.profile, time.time()-current_time))
