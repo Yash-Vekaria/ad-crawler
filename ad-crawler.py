@@ -4,6 +4,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver import Chrome
 from selenium import webdriver
+import threading
 import selenium
 
 # import undetected_chromedriver as uc
@@ -48,6 +49,18 @@ def parseArguments():
 		parser.add_argument("-mp", "--mountpath", type=str, required=False, help="Mounted path from docker run command")
 	args = parser.parse_args()
 	return args
+
+
+
+# Function to open the URL and set a flag when done
+def open_url(url, driver, done_flag):
+	print(time.time(), "Started")
+	try:
+		driver.get(url)
+	except Exception as e:
+		print(f"Error loading {url}: {e}")
+	finally:
+		done_flag.set()
 
 
 def readHeaderBiddingSites():
@@ -256,7 +269,28 @@ def main(args):
 			website = "http://" + str(hb_domain)
 			try:
 				print("Website:", website)
-				driver.get(website)
+				# driver.get(website)
+				
+				# Threading to open the URL and wait for a maximum of timeout seconds
+				done_flag = threading.Event()
+				thread = threading.Thread(target=open_url, args=(website, driver, done_flag))
+				thread.start()
+
+				# Timeout for each URL (in seconds) before moving to next URL
+				timeout = 120
+				
+				# Wait for the thread to finish or until the timeout is reached
+				thread.join(timeout)
+				
+				# If the thread is still running (URL not loaded within timeout), stop it and proceed
+				if not done_flag.is_set():
+					print(time.time(), f"Timed out while trying to load: {url}")
+					logger.write("\n[TIMEOUT] main()::ad-crawler: {}\nTimeout of 120secs occurred while getting the domain: {} in Iteration: {} | {} [Time: {}]".format(str(traceback.format_exc()), hb_domain, iteration, profile, time.time()-current_time))
+					raise BaseException("Raising BaseException while getting URL due to timeout issue")
+				else:
+					print(f"Successfully loaded: {website}")
+					logger.write("\nSuccessfully got the webpage ... [Time: {}]".format(time.time()-current_time))
+					pass
 			except BaseException as e:
 				logger.write("\n[ERROR] main()::ad-crawler: {}\nException occurred while getting the domain: {} in Iteration: {} | {} [Time: {}]".format(str(traceback.format_exc()), hb_domain, iteration, profile, time.time()-current_time))
 				try:
