@@ -45,33 +45,34 @@ class CustomPopupManager():
 
 
 	def managePopups(self, webdriver_):
+		current_site = self.curr_domain
 		try:
-			if "independent.co.uk" in self.curr_domain:
+			if "independent.co.uk" in current_site:
 				match = webdriver_.find_element(By.XPATH, '//iframe[@allow="payment"]')
 				if match:
 					webdriver_.switch_to.frame(match)
 					webdriver_.find_element(By.XPATH, '//button[@class="pn-template__close unbutton"]').click()
 					webdriver_.switch_to.default_content()
 				sleep(2)
-			elif "britannica.com" in self.curr_domain or "newsweek.com" in self.curr_domain:
+			elif "britannica.com" in current_site or "newsweek.com" in current_site:
 				match = webdriver_.find_element(By.XPATH, '//iframe[@id="gdpr-consent-notice"]')
 				if match:
 					webdriver_.switch_to.frame(match)
 					webdriver_.find_element(By.XPATH, '//span[contains(text(), "Accept All")]').click()
 					webdriver_.switch_to.default_content()
 				sleep(2)
-			elif "latimes.com" in self.curr_domain:
+			elif "latimes.com" in current_site:
 				shadow_access_js = '''return document.querySelector('modality-custom-element').shadowRoot.querySelector('a[class="met-flyout-close"]')'''
 				webdriver_.execute_script(shadow_access_js).click()
 				sleep(2)
-			elif "nypost.com" in self.curr_domain:
+			elif "nypost.com" in current_site:
 				match = webdriver_.find_element(By.XPATH, '//iframe[@data-zephr-component="component"]')
 				if match:
 					webdriver_.switch_to.frame(match)
 					webdriver_.find_element(By.XPATH, '//button[@external-event="flyout-close"]').click()
 					webdriver_.switch_to.default_content()
 				sleep(2)
-			elif "sfgate.com" in self.curr_domain or "chron.com" in self.curr_domain:
+			elif "sfgate.com" in current_site or "chron.com" in current_site:
 				try:
 					webdriver_.find_element(By.XPATH, '//button[@data-group="editorial"]').click()
 				except:
@@ -87,7 +88,7 @@ class CustomPopupManager():
 					pass
 				webdriver_.find_element(By.XPATH, '//a[@class="fancybox-item fancybox-close"]').click()
 				sleep(2)
-			elif "guardian.co" in self.curr_domain:
+			elif "guardian.co" in current_site:
 				match = webdriver_.find_element(By.XPATH, '//iframe[@title="SP Consent Message"]')
 				if match:
 					webdriver_.switch_to.frame(match)
@@ -103,8 +104,8 @@ class CustomPopupManager():
 		except:
 			pass
 
-		if self.curr_domain in self.rule_dict.keys():
-			for rule in self.rule_dict[self.curr_domain]:
+		if current_site in self.rule_dict.keys():
+			for rule in self.rule_dict[current_site]:
 				try:
 					webdriver_.find_element(By.XPATH, '''{}'''.format(rule)).click()
 					sleep(1)
