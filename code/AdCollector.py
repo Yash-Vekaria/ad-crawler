@@ -4,6 +4,7 @@ from adblockparser import AdblockRules
 from bs4 import BeautifulSoup
 from tld import get_fld
 from time import sleep
+import threading
 import traceback
 import requests
 import pickle
@@ -220,31 +221,17 @@ class AdCollector():
 
 
 	def captureScreenshot(self, matched_element, output_path):
-		matched_element.location_once_scrolled_into_view
-		matched_element.screenshot(output_path)
+		try:
+			matched_element.location_once_scrolled_into_view
+			matched_element.screenshot(output_path)
+		except BaseException as e:
+			pass
 		return
 
 
-	def collectAds(self, webdriver):
-		observed_elements = set()
-		iframe_source_matches, iframe_href_matches = [], []
-		css_source_matches, css_href_matches = [], []
-		
-		matching_logic = '''
-		{
-			let matches = document.querySelectorAll(selector);
-			matches.forEach((match) => {
-				ads.add(match);
-			});
-		})
-		'''
-		js_script = f"let ads = new Set();" \
-					f"let selectors = {self.filter_rules};" \
-					f"selectors.forEach((selector) => {matching_logic}" \
-					f"return Array.from(ads);"
-
-		# ################# CSS MATCHING #################
+	def collectCSSAds(self, webdriver, observed_elements, css_source_matches, css_href_matches, js_script, done_flag):
 		current_time = time.time()
+		print(current_time, "Started")
 		try:
 			matching_css_elements = webdriver.execute_script(js_script)
 			for idx, match in enumerate(matching_css_elements):
@@ -282,6 +269,54 @@ class AdCollector():
 		except BaseException as e:
 			self.logger.write("\nCSS ad collection failure: {} for domain: {} in Iteration: () | {} [Time: {}]".format(str(traceback.format_exc()), self.site, self.iteration, self.profile, time.time()-current_time))
 			pass
+		finally:
+			done_flag.set()
+		print("Succesfully captured " + str(len(css_source_matches)) + " CSS-based element screenshots out of " + str(len(matching_css_elements)))
+		self.write_data(os.path.join(self.ads_output_path, '..', 'cssmatch_screenshot_logs_src.csv'), css_source_matches)
+		self.write_data(os.path.join(self.ads_output_path, '..', 'cssmatch_screenshot_logs_href.csv'), css_href_matches)
+		return
+
+
+	def collectAds(self, webdriver):
+		observed_elements = set()
+		iframe_source_matches, iframe_href_matches = [], []
+		css_source_matches, css_href_matches = [], []
+		
+		matching_logic = '''
+		{
+			let matches = document.querySelectorAll(selector);
+			matches.forEach((match) => {
+				ads.add(match);
+			});
+		})
+		'''
+		js_script = f"let ads = new Set();" \
+					f"let selectors = {self.filter_rules};" \
+					f"selectors.forEach((selector) => {matching_logic}" \
+					f"return Array.from(ads);"
+
+		# ################# CSS MATCHING #################
+		current_time = time.time()
+		done_flag = threading.Event()
+		thread = threading.Thread(target=collectCSSAds, args=(webdriver, observed_elements, css_source_matches, css_href_matches, js_script, done_flag))
+		thread.start()
+
+		# Timeout for each URL (in seconds) before moving to next URL
+		timeout = 500
+		
+		# Wait for the thread to finish or until the timeout is reached
+		thread.join(timeout)
+		
+		# If the thread is still running (URL not loaded within timeout), stop it and proceed
+		if not done_flag.is_set():
+			print(time.time(), f"Timed out while trying to load: {url}")
+			self.logger.write("\n[TIMEOUT] main()::ad-crawler: {}\nTimeout of 120secs occurred while getting the domain: {} in Iteration: {} | {} [Time: {}]".format(str(traceback.format_exc()), hb_domain, iteration, profile, time.time()-current_time))
+			raise BaseException("Raising BaseException while getting URL due to timeout issue")
+		else:
+			print(f"Successfully loaded: {website}")
+			self.logger.write("\nSuccessfully got the webpage ... [Time: {}]".format(time.time()-current_time))
+			pass
+		# observed_elements, css_source_matches, css_href_matches = self.collectCSSAds(webdriver, observed_elements, css_source_matches, css_href_matches, js_script)
 		try:
 			webdriver.execute_script("window.scrollTo(0, 0);")
 		except:
@@ -334,15 +369,15 @@ class AdCollector():
 
 		current_time = time.time()
 		try:
-			print("Succesfully captured " + str(len(css_source_matches)) + " CSS-based element screenshots out of " + str(len(matching_css_elements)))
+			# print("Succesfully captured " + str(len(css_source_matches)) + " CSS-based element screenshots out of " + str(len(matching_css_elements)))
 			print("Succesfully captured " + str(len(iframe_source_matches)) + " iframe-based screenshots out of " + str(len(iframe_elements)))
-			self.logger.write("\nSuccesfully captured {} CSS-based element screenshots out of {} for domain: {} | {}".format(str(len(css_source_matches)), str(len(matching_css_elements)), self.site, self.profile))
+			# self.logger.write("\nSuccesfully captured {} CSS-based element screenshots out of {} for domain: {} | {}".format(str(len(css_source_matches)), str(len(matching_css_elements)), self.site, self.profile))
 			self.logger.write("\nSuccesfully captured {} iframe-based screenshots out of {} for domain: {} | {}".format(str(len(iframe_source_matches)), str(len(iframe_elements)), self.site, self.profile))
 			
 			self.write_data(os.path.join(self.ads_output_path, '..', 'iframe_source_matches.csv'), iframe_source_matches)
 			self.write_data(os.path.join(self.ads_output_path, '..', 'iframe_href_matches.csv'), iframe_href_matches)
-			self.write_data(os.path.join(self.ads_output_path, '..', 'cssmatch_screenshot_logs_src.csv'), css_source_matches)
-			self.write_data(os.path.join(self.ads_output_path, '..', 'cssmatch_screenshot_logs_href.csv'), css_href_matches)
+			# self.write_data(os.path.join(self.ads_output_path, '..', 'cssmatch_screenshot_logs_src.csv'), css_source_matches)
+			# self.write_data(os.path.join(self.ads_output_path, '..', 'cssmatch_screenshot_logs_href.csv'), css_href_matches)
 		except BaseException as e:
 			self.logger.write("\nWriting ad output failure: {} for domain: {} | {} [Time: {}]".format(str(traceback.format_exc()), self.site, self.profile, time.time()-current_time))
 			pass
