@@ -311,7 +311,7 @@ class AdCollector():
 			# If the thread is still running (URL not loaded within timeout), stop it and proceed
 			if not done_flag.is_set():
 				print(time.time(), "Timed out while trying to collect CSS ads")
-				self.logger.write("\n[TIMEOUT] main()::ad-crawler: {}\nCSS Ad collection didn't complete as timeout of 500secs occurred while collecting CSS ads for domain: {} in Iteration: {} | {} [Time: {}]".format(str(traceback.format_exc()), self.site, self.iteration, self.profile, time.time()-current_time))
+				self.logger.write("\n[TIMEOUT] collectAds()::AdCollector: {}\nCSS Ad collection didn't complete as timeout of 500secs occurred while collecting CSS ads for domain: {} in Iteration: {} | {} [Time: {}]".format(str(traceback.format_exc()), self.site, self.iteration, self.profile, time.time()-current_time))
 				raise BaseException("Raising BaseException while collecting CSS ads due to timeout issue")
 			else:
 				self.logger.write("\nSuccessfully collected CSS Ads wihin 500s ... [Time: {}]".format(time.time()-current_time))
