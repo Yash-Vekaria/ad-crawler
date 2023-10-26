@@ -349,10 +349,9 @@ def main(args):
 			if not pop_flag.is_set():
 				print(time.time(), f"Timed out while trying to give consent: {url}")
 				logger.write("\n[TIMEOUT] main()::ad-crawler: {}\nTimeout of 200secs occurred while handling consent in managePopups() for the domain: {} in Iteration: {} | {} [Time: {}]".format(str(traceback.format_exc()), hb_domain, iteration, profile, time.time()-current_time))
-				raise BaseException("Raising BaseException while getting URL due to timeout issue")
 			else:
 				print(f"Successfully loaded: {website}")
-				logger.write("\nSuccessfully managePopups() ... [Time: {}]".format(time.time()-current_time))
+				logger.write("\nSuccessfully completed managePopups() ... [Time: {}]".format(time.time()-current_time))
 				pass
 			# cpm.managePopups(driver)
 	
@@ -366,10 +365,9 @@ def main(args):
 			if not consent_flag.is_set():
 				print(time.time(), f"Timed out while trying to give consent: {url}")
 				logger.write("\n[TIMEOUT] main()::ad-crawler: {}\nTimeout of 200secs occurred while handling consent in acceptMissedConsents() for the domain: {} in Iteration: {} | {} [Time: {}]".format(str(traceback.format_exc()), hb_domain, iteration, profile, time.time()-current_time))
-				raise BaseException("Raising BaseException while getting URL due to timeout issue")
 			else:
 				print(f"Successfully loaded: {website}")
-				logger.write("\nSuccessfully acceptMissedConsents() ... [Time: {}]".format(time.time()-current_time))
+				logger.write("\nSuccessfully completed acceptMissedConsents() ... [Time: {}]".format(time.time()-current_time))
 				pass
 			# cpm.acceptMissedConsents(driver)
 			
@@ -386,10 +384,9 @@ def main(args):
 			if not consent_flag.is_set():
 				print(time.time(), f"Timed out while trying to give consent: {url}")
 				logger.write("\n[TIMEOUT] main()::ad-crawler: {}\nTimeout of 200secs occurred while handling consent in acceptMissedConsents() for the domain: {} in Iteration: {} | {} [Time: {}]".format(str(traceback.format_exc()), hb_domain, iteration, profile, time.time()-current_time))
-				raise BaseException("Raising BaseException while getting URL due to timeout issue")
 			else:
 				print(f"Successfully loaded: {website}")
-				logger.write("\nSuccessfully acceptMissedConsents() ... [Time: {}]".format(time.time()-current_time))
+				logger.write("\nSuccessfully completed acceptMissedConsents() ... [Time: {}]".format(time.time()-current_time))
 				pass
 			# cpm.acceptMissedConsents(driver)
 	
@@ -403,10 +400,8 @@ def main(args):
 			if not pop_flag.is_set():
 				print(time.time(), f"Timed out while trying to give consent: {url}")
 				logger.write("\n[TIMEOUT] main()::ad-crawler: {}\nTimeout of 200secs occurred while handling consent in managePopups() for the domain: {} in Iteration: {} | {} [Time: {}]".format(str(traceback.format_exc()), hb_domain, iteration, profile, time.time()-current_time))
-				raise BaseException("Raising BaseException while getting URL due to timeout issue")
 			else:
-				print(f"Successfully loaded: {website}")
-				logger.write("\nSuccessfully managePopups() ... [Time: {}]".format(time.time()-current_time))
+				logger.write("\nSuccessfully completed managePopups() ... [Time: {}]".format(time.time()-current_time))
 				pass
 			# cpm.managePopups(driver)
 			logger.write("\nPopup-Consent-2 handled! [Time: {}]".format(time.time()-current_time))
