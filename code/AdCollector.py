@@ -298,7 +298,7 @@ class AdCollector():
 		# ################# CSS MATCHING #################
 		current_time = time.time()
 		done_flag = threading.Event()
-		thread = threading.Thread(target=collectCSSAds, args=(webdriver, observed_elements, css_source_matches, css_href_matches, js_script, done_flag))
+		thread = threading.Thread(target=self.collectCSSAds, args=(webdriver, observed_elements, css_source_matches, css_href_matches, js_script, done_flag))
 		thread.start()
 
 		# Timeout for each URL (in seconds) before moving to next URL
