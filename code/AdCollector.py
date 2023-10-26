@@ -297,26 +297,29 @@ class AdCollector():
 
 		# ################# CSS MATCHING #################
 		current_time = time.time()
-		done_flag = threading.Event()
-		thread = threading.Thread(target=self.collectCSSAds, args=(webdriver, observed_elements, css_source_matches, css_href_matches, js_script, done_flag))
-		thread.start()
-
-		# Timeout for each URL (in seconds) before moving to next URL
-		timeout = 500
-		
-		# Wait for the thread to finish or until the timeout is reached
-		thread.join(timeout)
-		
-		# If the thread is still running (URL not loaded within timeout), stop it and proceed
-		if not done_flag.is_set():
-			print(time.time(), f"Timed out while trying to load: {url}")
-			self.logger.write("\n[TIMEOUT] main()::ad-crawler: {}\nTimeout of 120secs occurred while getting the domain: {} in Iteration: {} | {} [Time: {}]".format(str(traceback.format_exc()), hb_domain, iteration, profile, time.time()-current_time))
-			raise BaseException("Raising BaseException while getting URL due to timeout issue")
-		else:
-			print(f"Successfully loaded: {website}")
-			self.logger.write("\nSuccessfully got the webpage ... [Time: {}]".format(time.time()-current_time))
+		try:
+			done_flag = threading.Event()
+			thread = threading.Thread(target=self.collectCSSAds, args=(webdriver, observed_elements, css_source_matches, css_href_matches, js_script, done_flag))
+			thread.start()
+	
+			# Timeout for each URL (in seconds) before moving to next URL
+			timeout = 500
+			
+			# Wait for the thread to finish or until the timeout is reached
+			thread.join(timeout)
+			
+			# If the thread is still running (URL not loaded within timeout), stop it and proceed
+			if not done_flag.is_set():
+				print(time.time(), "Timed out while trying to collect CSS ads")
+				self.logger.write("\n[TIMEOUT] main()::ad-crawler: {}\nCSS Ad collection didn't complete as timeout of 500secs occurred while collecting CSS ads for domain: {} in Iteration: {} | {} [Time: {}]".format(str(traceback.format_exc()), self.site, self.iteration, self.profile, time.time()-current_time))
+				raise BaseException("Raising BaseException while collecting CSS ads due to timeout issue")
+			else:
+				self.logger.write("\nSuccessfully collected CSS Ads wihin 500s ... [Time: {}]".format(time.time()-current_time))
+				pass
+			# observed_elements, css_source_matches, css_href_matches = self.collectCSSAds(webdriver, observed_elements, css_source_matches, css_href_matches, js_script)
+		except BaseException as e:
+			self.logger.write("\nError occured in CSS Ad collection for domain {} in iteration {} after time [{}] | {}: {}".format(self.site, self.iteration, time.time()-current_time, self.profile, str(traceback.format_exc())))
 			pass
-		# observed_elements, css_source_matches, css_href_matches = self.collectCSSAds(webdriver, observed_elements, css_source_matches, css_href_matches, js_script)
 		try:
 			webdriver.execute_script("window.scrollTo(0, 0);")
 		except:
