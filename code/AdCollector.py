@@ -268,8 +268,8 @@ class AdCollector():
 					css_source_matches.append(str(idx) + ',' + str(src_attributes))
 					css_href_matches.append(str(idx) + ',' + str(href_attributes))
 					
-					if href_attributes is not None and href_attributes.strip() != "":
-						self.storeAdResponse(href_attributes.split('||')[0], os.path.join(self.ads_output_path, str(idx) + '_css_response.pickle'))
+					# if href_attributes is not None and href_attributes.strip() != "":
+					# 	self.storeAdResponse(href_attributes.split('||')[0], os.path.join(self.ads_output_path, str(idx) + '_css_response.pickle'))
 					sleep(0.5)
 
 				except Exception as exc:
@@ -312,8 +312,8 @@ class AdCollector():
 					iframe_source_matches.append(str(idx) + ',' + "||".join(src_attributes))
 					iframe_href_matches.append(str(idx) + ',' + "||".join(href_attributes))
 					
-					if href_attributes is not None and "||".join(href_attributes).strip() != "":
-						self.storeAdResponse(href_attributes[0], os.path.join(self.ads_output_path, str(idx) + '_css_response.pickle'))
+					# if href_attributes is not None and "||".join(href_attributes).strip() != "":
+					# 	self.storeAdResponse(href_attributes[0], os.path.join(self.ads_output_path, str(idx) + '_css_response.pickle'))
 					sleep(0.5)
 					
 
