@@ -323,8 +323,8 @@ def main(args):
 					print("\n[ERROR] main()::Webdriver-Intitialization: {}".format(str(traceback.format_exc())))
 					logger.write("\n[ERROR] main()::Webdriver-Intitialization: {} for domain: {} in Iteration: {}| {} [Time: {}]".format(str(traceback.format_exc()), hb_domain, iteration, profile, time.time()-current_time))
 					continue
-				print("\nChromedriver successfully loaded!")
 				continue
+			print("\nChromedriver successfully loaded website!")
 			# Wait for page to completely load
 			sleep(10)
 			print("Visiting and loading webpage ...")
