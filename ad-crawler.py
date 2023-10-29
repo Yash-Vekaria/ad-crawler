@@ -264,6 +264,7 @@ def main(args):
 				# driver = uc.Chrome(service=Service(ChromeDriverManager().install()), version_main=114, options=chrome_options) #executable_path=‘chromedriver’
 				driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 			except BaseException as error:
+				continue
 				proxy.close()
 				server.stop()
 				killBrowermobproxyInstances()
