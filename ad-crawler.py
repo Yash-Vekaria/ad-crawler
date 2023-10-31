@@ -410,10 +410,12 @@ def main(args):
 	
 			
 			# Read filterlist rules
+			'''
 			f = open(os.path.join(ROOT_DIRECTORY, "data", "EasyList", "easylist.txt"), "r")
 			rules = f.read().split("\n")
 			f.close()
 			rules = [rule[2:] for rule in rules[18:] if rule.startswith("##")]
+   			'''
 	
 	
 			# Save DOM of the webpage
@@ -453,6 +455,7 @@ def main(args):
 	
 			
 			# Collect ads on the website
+			'''
 			print("Starting to collect ads ...")
 			ad_path = os.path.join(experimental_path, "ads")
 			if not(os.path.exists(ad_path)):
@@ -476,6 +479,7 @@ def main(args):
 			except:
 				pass
 			print("Fullpage screenshot of the webpage captured")
+   			'''
 	
 	
 			# Complete HAR Collection and save .har file
