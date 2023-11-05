@@ -194,7 +194,7 @@ def configureProxy(port, profile_name, profile_dir):
 	return server, proxy, chrome_options
 
 
-def killBrowermobproxyInstances():
+def killBrowsermobproxyInstances():
 	for process in psutil.process_iter():
 		try:
 			process_info = process.as_dict(attrs=['name', 'cmdline'])
@@ -267,7 +267,7 @@ def main(args):
 				continue
 				proxy.close()
 				server.stop()
-				killBrowermobproxyInstances()
+				killBrowsermobproxyInstances()
 				logger.write("\n[ERROR] main()::Webdriver-Intitialization: {} for domain: {} in Iteration: {} | {} [Time: {}]".format(str(traceback.format_exc()), hb_domain, iteration, profile, time.time()-current_time))
 				continue
 			logger.write("\nChromedriver successfully loaded! [Time: {}]".format(time.time()-current_time))
@@ -319,7 +319,7 @@ def main(args):
 					driver.quit()
 					proxy.close()
 					server.stop()
-					killBrowermobproxyInstances()
+					killBrowsermobproxyInstances()
 				except:
 					print("\n[ERROR] main()::Webdriver-Intitialization: {}".format(str(traceback.format_exc())))
 					logger.write("\n[ERROR] main()::Webdriver-Intitialization: {} for domain: {} in Iteration: {}| {} [Time: {}]".format(str(traceback.format_exc()), hb_domain, iteration, profile, time.time()-current_time))
@@ -504,7 +504,7 @@ def main(args):
 			proxy.close()
 			server.stop()
 			driver.quit()
-			killBrowermobproxyInstances()
+			killBrowsermobproxyInstances()
 	
 			# End
 
