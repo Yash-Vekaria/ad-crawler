@@ -442,7 +442,8 @@ def main(args):
 			# cpm.acceptMissedConsents(driver)
 			
 			logger.write("\nPopup-Consent-1 handled!")
-			exploreFullPage(driver)
+			# exploreFullPage(driver)
+			perform_bot_mitigation(driver)
 			logger.write("\nWebpage explored fully.")
 			
 			consent_flag = threading.Event()
