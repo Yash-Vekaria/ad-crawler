@@ -1,3 +1,4 @@
+from selenium.webdriver.common.action_chains import ActionChains
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -15,6 +16,7 @@ import traceback
 import argparse
 import datetime
 import zipfile
+import random
 import psutil
 import codecs
 import time
@@ -205,6 +207,73 @@ def killBrowsermobproxyInstances():
 		except psutil.NoSuchProcess:
 			pass
 	return
+
+
+# Function to perform bot mitigation techniques
+def perform_bot_mitigation(driver):
+	
+	# Bot mitigation 1: Move mouse randomly around a number of times
+	print("Performing Bot Mitigation 1")
+	RANDOM_SLEEP_LOW, RANDOM_SLEEP_HIGH, NUM_MOUSE_MOVES = 1, 8, 10
+	num_moves, num_fails = 0, 0
+	
+	while num_moves < NUM_MOUSE_MOVES + 1 and num_fails < NUM_MOUSE_MOVES:
+		try:
+			move_max = random.randint(0, 350)
+			x = random.randint(-move_max, move_max)
+			y = random.randint(-move_max, move_max)
+			action = ActionChains(driver)
+			action.move_by_offset(x, y)
+			action.perform()
+			num_moves += 1
+		except:
+			# MoveTargetOutOfBoundsException
+			num_fails += 1
+			pass
+
+	# Bot mitigation 2: Scroll smoothly in random intervals down the page and then back to the top
+	print("Performing Bot Mitigation 2")
+	SCROLL_MAX = 50
+	try:
+		scroll_count = 0
+		page_height = int(driver.execute_script('return Math.max( document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight );'))
+		for i in range(1, page_height, 250):
+			scroll_count += 1
+			if scroll_count > SCROLL_MAX:
+				break;
+			page_height = int(driver.execute_script('return Math.max( document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight );'))
+			try:
+				driver.execute_script("window.scrollTo(0, {});".format(i))
+				sleep(random.randrange(0, 5))
+			except:
+				continue
+	except:
+		pass
+	sleep(10)  # Wait at the bottom
+
+	try:
+		scroll_count = 0
+		page_height = int(driver.execute_script('return Math.max( document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight );'))
+		for i in range(page_height, 0, -250):
+			scroll_count += 1
+			if scroll_count > SCROLL_MAX:
+				break;
+			page_height = int(driver.execute_script('return Math.max( document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight );'))
+			try:
+				driver.execute_script("window.scrollTo(0, {});".format(i))
+				sleep(random.randrange(0, 5))
+			except:
+				continue
+	except:
+		pass
+	sleep(10)  # Wait at the top
+
+	# Bot mitigation 3: Randomly wait so page visits happen with irregularity between consectutive websites
+	print("Performing Bot Mitigation 3")
+	sleep(random.randrange(RANDOM_SLEEP_LOW, RANDOM_SLEEP_HIGH))
+	
+	return
+
 
 
 def main(args):
