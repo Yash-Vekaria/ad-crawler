@@ -17,6 +17,11 @@ A repository to crawl the bids, advertisers, and ads on websites.
    `
    conda env create -f environment.yml
    `
+   Commands to activate and deactivate:
+   `
+   conda activate ad-crawler-env
+   conda deactivate
+   `
 
 5. Create a directory: `consent-extension` inside the cloned project directory and cd into that directory. Next, clone [Consent-O-Matic](https://github.com/cavi-au/Consent-O-Matic) repository inside `consent-extension`.<br>
    `
@@ -29,12 +34,12 @@ A repository to crawl the bids, advertisers, and ads on websites.
    git clone https://github.com/cavi-au/Consent-O-Matic.git
    `
 
-7. Set necessary consents by modifying values of variables `D`, `A`, `B`, `E`, `F`, and `X` to either `true` or `false` (default). The meaning of these variables are explained [here](https://github.com/cavi-au/Consent-O-Matic#consent-categories). Set the values of these variables in the dictionary object: `GDPRConfig.defaultValues` present in the following file:<br>
+6. Set necessary consents by modifying values of variables `D`, `A`, `B`, `E`, `F`, and `X` to either `true` or `false` (default). The meaning of these variables are explained [here](https://github.com/cavi-au/Consent-O-Matic#consent-categories). Set the values of these variables in the dictionary object: `GDPRConfig.defaultValues` present in the following file:<br>
    `
    /consent-extension/Consent-O-Matic/Extension/GDPRConfig.js
    `
    
-8. Run the crawler by provinding relevent arguments:<br>
+7. Run the crawler by provinding relevent arguments:<br>
    `
    python3 ad-crawler.py --profile="<profile-name>" --proxyport=<proxy-port> --chromedatadir="<user-profile-dir>"
    `
@@ -60,9 +65,9 @@ Follow the steps below to perform crawls using a docker:<br>
 4. Follow steps 1, 2, 5, 6, and 7 from the above normal crawling steps.
 
 5. Build the docker using the command:<br>
-   `docker build -t <docker-image>`<br>
+   `docker build -t <docker-image> .`<br>
    Example:<br>
-   `docker build -t ad-crawler`
+   `docker build -t ad-crawler .`
 
 7. Run the docker container:<br>
    ```
