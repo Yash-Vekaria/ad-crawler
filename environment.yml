@@ -1,5 +1,5 @@
 # conda env export --name iot
-name: ad-crawler-env.yml
+name: ad-crawler-env
 
 channels:
   - defaults
