@@ -20,6 +20,8 @@ A repository to crawl the bids, advertisers, and ads on websites.
    Commands to activate and deactivate:<br>
    `
    conda activate ad-crawler-env
+   `<br>
+   `
    conda deactivate
    `
 
