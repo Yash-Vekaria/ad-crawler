@@ -16,8 +16,8 @@ A repository to crawl the bids, advertisers, and ads on websites.
 4. Create conda environment and install all the required dependencies in the environment using the .yml file:<br>
    `
    conda env create -f environment.yml
-   `
-   Commands to activate and deactivate:
+   `<br>
+   Commands to activate and deactivate::<br>
    `
    conda activate ad-crawler-env
    conda deactivate
