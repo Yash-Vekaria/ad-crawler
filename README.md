@@ -23,11 +23,11 @@ A repository to crawl the bids, advertisers, and ads on websites.
    conda deactivate
    `
 
-5. Add XVNC and Java Support:
+5. Add XVNC and Java Support: <br>
    `
    sudo apt update
    sudo apt install -y tigervnc-standalone-server default-jre wget
-   `
+   ` <br>
 
 6. Create a directory: `consent-extension` inside the cloned project directory and cd into that directory. Next, clone [Consent-O-Matic](https://github.com/cavi-au/Consent-O-Matic) repository inside `consent-extension`.<br>
    `
