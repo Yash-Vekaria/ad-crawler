@@ -17,7 +17,7 @@ A repository to crawl the bids, advertisers, and ads on websites.
    `
    conda env create -f environment.yml
    `<br>
-   Commands to activate and deactivate::<br>
+   Commands to activate and deactivate:<br>
    `
    conda activate ad-crawler-env
    conda deactivate
