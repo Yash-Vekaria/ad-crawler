@@ -96,7 +96,9 @@ def readHeaderBiddingSites():
 def getChromeOptionsObject():
 	global ROOT_DIRECTORY;
 	chrome_options = Options()
-	chrome_options.binary_location = "/usr/bin/google-chrome-stable" 
+	chrome_options.binary_location = "/usr/bin/google-chrome-stable"
+	custom_user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
+	chrome_options.add_argument(f"--user-agent={custom_user_agent}")
 	# chrome_options.add_argument("--headless")
 	# chrome_options.add_argument("--disable-gpu")
 	# chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
