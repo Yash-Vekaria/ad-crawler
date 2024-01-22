@@ -26,6 +26,8 @@ class BidParser():
 
         with open(output_filepath, "w") as csvfile:
             csvwriter = csv.writer(csvfile)
+            header = ["Profile","HBPublisherDomain","AdId","AdUnitCode","AdSize","CreativeId","AuctionId","DealId","Bidder","CPM","BidFloorValue","BidCurrency","AdvertiserId","AdvertiserDomain"]
+            csvwriter.writerow(header)
             for site_dir in os.listdir(crawl_dir):
                 bid_file_path = os.path.join(crawl_dir, site_dir, "{}_bids.json".format(site_dir))
                 if not(os.path.exists(bid_file_path)):
@@ -36,10 +38,12 @@ class BidParser():
                     if line.strip().strip("").strip(" ") == "":
                         continue
                     bid_data = json.loads(line)
-                    publisher_domain = str(site_dir)
+                    # publisher_domain = str(site_dir)
+                    publisher_domain = str(site_dir.split("_")[0])
                     ad_id = bid_data.get("adId", "")
                     bidder = bid_data.get("bidder", "")
                     cpm = bid_data.get("cpm", "")
+                    ad_unit_code = bid_data.get("bid", {}).get("adUnitCode", "")
                     bid_currency = bid_data.get("bid", {}).get("currency", "")
                     floor_value = bid_data.get("bid", {}).get("floorData", {}).get("floorValue", "")
                     advertiser_domain = bid_data.get("bid", {}).get("adserverTargeting", {}).get("hb_adomain", "")
@@ -51,7 +55,7 @@ class BidParser():
                     auction_id = bid_data.get("bid", {}).get("auctionId", "")
                     creative_id = bid_data.get("bid", {}).get("creativeId", "")
                     deal_id = bid_data.get("bid", {}).get("dealId", "")
-                    row = [self.crawl, publisher_domain, ad_id, ad_size, creative_id, auction_id, deal_id, bidder, cpm, floor_value, bid_currency, advertiser_id, advertiser_domain]
+                    row = [self.crawl, publisher_domain, ad_id, ad_unit_code, ad_size, creative_id, auction_id, deal_id, bidder, cpm, floor_value, bid_currency, advertiser_id, advertiser_domain]
                     print(row)
                     csvwriter.writerow(row)
             csvfile.close()
@@ -65,7 +69,7 @@ def main():
     for file_ in os.listdir(crawl_dir):
         if file_ == "bids":
             continue
-        elif os.path.exists(os.path.join(crawl_dir, "bids", "{}_bids.json".format(file_))):
+        elif os.path.exists(os.path.join(crawl_dir, "bids", "{}_bids.json".format(file_))): # elif os.path.exists(os.path.join(crawl_dir, "bids", "{}_bids.csv".format(file_))):
             continue
         profile_to_analyse = file_
         bp = BidParser(profile_to_analyse)
