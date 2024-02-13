@@ -8,7 +8,7 @@ from selenium import webdriver
 import threading
 import selenium
 
-# import undetected_chromedriver as uc
+import undetected_chromedriver as uc
 from browsermobproxy import Server
 from time import sleep
 import pandas as pd
@@ -29,7 +29,7 @@ from CustomPopupManager import *
 from BidCollector import *
 from AdCollector import *
 
-DOCKER = True
+DOCKER = False
 if DOCKER:
 	from pyvirtualdisplay import Display
 	disp = Display(backend="xvnc", size=(1920,1080), rfbport=1212) # 1212 has to be a random port number
@@ -97,8 +97,6 @@ def getChromeOptionsObject():
 	global ROOT_DIRECTORY;
 	chrome_options = Options()
 	chrome_options.binary_location = "/usr/bin/google-chrome-stable"
-	custom_user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
-	# chrome_options.add_argument(f"--user-agent={custom_user_agent}")
 	# chrome_options.add_argument("--headless")
 	# chrome_options.add_argument("--disable-gpu")
 	# chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
@@ -112,8 +110,27 @@ def getChromeOptionsObject():
 	chrome_options.add_argument("--disable-notifications")
 	chrome_options.add_argument("--disable-popup-blocking")
 	chrome_options.add_argument("--ignore-certificate-errors")
+	chrome_options.add_argument("--disable-blink-features=AutomationControlled")
 	extension_dir = os.path.join(ROOT_DIRECTORY, "consent-extension", "Consent-O-Matic", "Extension")
 	chrome_options.add_argument('--load-extension={}'.format(extension_dir))
+	prefs = {
+		"translate_whitelists": {"lt": "en"},
+		"translate_whitelists": {"fr": "en"},
+		"translate_whitelists": {"ro": "en"},
+		"translate_whitelists": {"pl": "en"},
+		"translate_whitelists": {"de": "en"},
+		"translate_whitelists": {"hu": "en"},
+		"translate_whitelists": {"sr": "en"},
+		"translate_whitelists": {"cs": "en"},
+		"translate_whitelists": {"cz": "en"},
+		"translate_whitelists": {"sk": "en"},
+		"translate_whitelists": {"es": "en"},
+		"translate_whitelists": {"da": "en"},
+		"translate_whitelists": {"pt": "en"},
+		"translate":{"enabled": True}
+	}
+	chrome_options.add_experimental_option("prefs", prefs)
+	chrome_options.add_argument("--lang=en")
 	return chrome_options
 
 
@@ -138,64 +155,15 @@ def exploreFullPage(webdriver_):
 	return
 
 
-def configureProxy(port, profile_name, profile_dir):
-	'''
-	Instatiate and start browsermobproxy to collect HAR files and accordingly configure chrome options
-	Killing open ports:
-		- lsof -i:<port>
-		- kill -9 <PID>
-	'''
-	global ROOT_DIRECTORY;
-	
-	try:
-		print("Total browsermobproxy instances currently running:", os.system("ps -aux | grep browsermob | wc -l"))
-		os.system("ps -eo etimes,pid,args --sort=-start_time | grep browsermob | awk '{print $2}' | sudo xargs kill")
-		print("Total browsermobproxy instances currently running:", os.system("ps -aux | grep browsermob | wc -l"))
-		print("Killed all the zombie instances of browsermobproxy from previous visit!")
-		for proc in psutil.process_iter():
-			if proc.name() == "browsermob-proxy":
-				proc.kill()
-	except:
-		pass
-	try:
-		from signal import SIGTERM # or SIGKILL
-		for proc in process_iter():
-			for conns in proc.connections(kind='inet'):
-				if conns.laddr.port == 8022:
-					proc.send_signal(SIGTERM)
-	except:
-		pass
-	
-	try:
-		proxy.close()
-	except:
-		pass
-	try:
-		server.close()
-	except:
-		pass
-	try:
-		server = Server(os.path.join(ROOT_DIRECTORY, "data", "browsermob-proxy-2.1.4", "bin", "browsermob-proxy"), options={'port': port})
-		server.start()
-		sleep(10)
-		proxy = server.create_proxy()
-	except BaseException as error:
-		print("\nAn exception occurred:", traceback.format_exc(), "in configureProxy()")
-		# logger.write("\n[ERROR] configureProxy():\n" + str(traceback.format_exc()))
-		return None, None, None
-
+def configureProxy(profile_name, profile_dir):
 	# Instantiate chromedriver options
 	chrome_options = getChromeOptionsObject()
 
 	# Associate proxy-related settings to the chromedriver
-	chrome_options.add_argument("--proxy-server={}".format(proxy.proxy))
-	chrome_options.add_argument("--ignore-ssl-errors=yes")
-	chrome_options.add_argument("--use-littleproxy false")
-	chrome_options.add_argument("--proxy=127.0.0.1:%s" % port)
 	chrome_options.add_argument("--user-data-dir=%s" % profile_dir)
-	# chrome_options.add_argument("--profile-directory=%s" % profile_name)
+	chrome_options.add_argument("--profile-directory=%s" % profile_name)
 	
-	return server, proxy, chrome_options
+	return chrome_options
 
 
 def killBrowsermobproxyInstances():
@@ -289,13 +257,35 @@ def main(args):
 		ROOT_DIRECTORY = args.mountpath
 	
 
-	# Reading Top 104 Header Bidding supported websites
+	# Reading Top 100 Header Bidding supported websites
 	# hb_dict stores mapping of hb_domain to hb_rank (tranco_rank)
 	hb_dict = readHeaderBiddingSites()
+	
+	current_time = time.time()
+	try:
+		# kill -9 $(ps aux | grep '[c]hrome' | awk '{print $2}')
+		# ps aux | grep chrome
+		# driver = uc.Chrome(service=Service(ChromeDriverManager().install()), version_main=114, options=configureProxy(profile, chrome_profile_dir)) #executable_path=‘chromedriver’ #114
+		driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=configureProxy(profile, chrome_profile_dir))
+		sleep(15)
+		driver.refresh()
+	except BaseException as error:
+		print("Chromedriver loading issue: " + str(error))
+		exit()
+	print("\nChromedriver successfully loaded!")
 
 	for iteration in [1, 2, 3]:
 		for idx, (hb_domain, hb_rank) in enumerate(hb_dict.items()):
-	
+			
+			if iteration >= 3 and hb_domain == "google.com":
+				continue
+
+			# if iteration == 1 and idx < 13:
+			# 	continue
+
+			# if iteration <=1 or iteration == 2 and idx < 72:
+			# 	continue
+			
 			start_time = time.time()
 			print("\n\nStarting to crawl:", iteration, idx, hb_domain, hb_rank)
 	
@@ -309,52 +299,19 @@ def main(args):
 			ct = datetime.datetime.now()
 			logger.write("\n\nCrawl {} Start Time: {} [TS:{}] [{}]".format(iteration, ct, ct.timestamp(), hb_domain))
 			print("Error logging started ...")
-	
-	
-			# Start the proxy server to facilitate capturing HAR file
-			current_time = time.time()
-			server, proxy, chrome_options = configureProxy(proxy_port, profile, chrome_profile_dir)
-			if server is None:
-				try:
-					proxy.close()
-				except:
-					pass
-				try:
-					server.close()
-				except:
-					pass
-				logger.write("Server issue while its initialization.")
-				continue
-			logger.write("\nBrowsermob-proxy successfully configured for domain: {} | {}! [Time: {}]".format(hb_domain, profile, time.time()-current_time))
-			print("\nBrowsermob-proxy successfully configured for domain: {} | {}!!".format(hb_domain, profile))
 			
 	
 			# Start the chromedriver instance
+			'''
 			current_time = time.time()
 			try:
 				# driver = uc.Chrome(service=Service(ChromeDriverManager().install()), version_main=114, options=chrome_options) #executable_path=‘chromedriver’
-				driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+				driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=configureProxy(profile, chrome_profile_dir))
 			except BaseException as error:
-				continue
-				proxy.close()
-				server.stop()
-				killBrowsermobproxyInstances()
-				logger.write("\n[ERROR] main()::Webdriver-Intitialization: {} for domain: {} in Iteration: {} | {} [Time: {}]".format(str(traceback.format_exc()), hb_domain, iteration, profile, time.time()-current_time))
 				continue
 			logger.write("\nChromedriver successfully loaded! [Time: {}]".format(time.time()-current_time))
 			print("\nChromedriver successfully loaded!")
-	
-	
-			# Start capturing HAR
-			current_time = time.time()
-			har_filepath = os.path.join(experimental_path, str(hb_domain)+"_"+str(iteration)+"_har.json")
-			try:
-				proxy.new_har(har_filepath, options={'captureHeaders': True,'captureContent':True})
-			except BaseException as error:
-				logger.write("\n[ERROR] main()::HarCaptureStart: {}\n for domain: {} in Iteration: {} | {} [Time: {}]".format(str(traceback.format_exc()), hb_domain, iteration, profile, time.time()-current_time))
-				pass
-			logger.write("\nHAR capture started! [Time: {}]".format(time.time()-current_time))
-			print("Starting HAR Capture")
+			'''
 	
 	
 			# Visit the current domain
@@ -386,23 +343,25 @@ def main(args):
 					pass
 			except BaseException as e:
 				logger.write("\n[ERROR] main()::ad-crawler: {}\nException occurred while getting the domain: {} in Iteration: {} | {} [Time: {}]".format(str(traceback.format_exc()), hb_domain, iteration, profile, time.time()-current_time))
+				'''
 				try:
 					driver.quit()
-					proxy.close()
-					server.stop()
-					killBrowsermobproxyInstances()
 				except:
 					print("\n[ERROR] main()::Webdriver-Intitialization: {}".format(str(traceback.format_exc())))
 					logger.write("\n[ERROR] main()::Webdriver-Intitialization: {} for domain: {} in Iteration: {}| {} [Time: {}]".format(str(traceback.format_exc()), hb_domain, iteration, profile, time.time()-current_time))
 					continue
+				'''
 				continue
 			print("\nChromedriver successfully loaded website!")
 			# Wait for page to completely load
 			sleep(10)
 			print("Visiting and loading webpage ...")
 			logger.write("\nVisiting and loading webpage ... [Time: {}]".format(time.time()-current_time))
-	
-	
+			
+			if hb_domain == "google.com":
+				sleep(300)
+			
+			
 			# Read custom popup handling rules
 			current_time = time.time()
 			f = open(os.path.join(ROOT_DIRECTORY, "data", "custom-popup-xpaths.txt"), "r")
@@ -487,7 +446,7 @@ def main(args):
 			rules = f.read().split("\n")
 			f.close()
 			rules = [rule[2:] for rule in rules[18:] if rule.startswith("##")]
-   			'''
+			'''
 	
 	
 			# Save DOM of the webpage
@@ -551,20 +510,7 @@ def main(args):
 			except:
 				pass
 			print("Fullpage screenshot of the webpage captured")
-   			'''
-	
-	
-			# Complete HAR Collection and save .har file
-			current_time = time.time()
-			try:
-				with open(har_filepath, 'w') as fhar:
-					json.dump(proxy.har, fhar, indent=4)
-				fhar.close()
-				logger.write("\nHAR dump saved for domain: {} in Iteration: {} | {} [Time: {}]".format(hb_domain, iteration, profile, time.time()-current_time))
-			except BaseException as error:
-				logger.write("\n[ERROR] main()::HarWriter: {}\nException occured while dumping the HAR for domain: {} in Iteration: {} | {} [Time: {}]".format(str(traceback.format_exc()), hb_domain, iteration, profile, time.time()-current_time))
-				pass
-			print("Network traffic saved")
+			'''
 	
 	
 			end_time = time.time()
@@ -573,12 +519,9 @@ def main(args):
 			logger.write("\nTotal time to crawl domain: {} in Iteration: {} is {}\n".format(hb_domain, iteration, total_time))
 	
 	
-			proxy.close()
-			server.stop()
-			driver.quit()
-			killBrowsermobproxyInstances()
+	driver.quit()
 	
-			# End
+	# End
 
 
 

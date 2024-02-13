@@ -12,6 +12,7 @@ consent-extension/
 
 
 # Files to ignore
+*original.py
 *checker.py
 crawler.py
 *2023.csv

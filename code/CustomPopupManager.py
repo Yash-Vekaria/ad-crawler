@@ -27,13 +27,93 @@ class CustomPopupManager():
 							button_click.append(ele)
 				except:
 					continue
+			
+			close_cross = webdriver_.find_element(By.XPATH, '//button/img[@alt="Close this offer"]')
+			close_cross.click()
+
 			if button_click:
 				bc = min(button_click, key=attrgetter('html_len'))
 				bc.click()
 				pass
+			if self.curr_domain == "lrytas.lt": 
+				more_options = webdriver_.find_element(By.XPATH, '//button/span[contains(text(),"DAUGIAU P")]') # "DAUGIAU PASIRINKIMŲ"
+				more_options.click()
+				accept_everything = webdriver_.find_element(By.XPATH, '//button[contains(text(),"PRIIMU VISK")]') # "PRIIMU VISKĄ"
+				accept_everything.click()
+				save_exit = webdriver_.find_elements(By.XPATH, '//button[contains(text(),"ĮRAŠYTI IR IŠEITI")]') # "ĮRAŠYTI IR IŠEITI"
+				save_exit[-1].click()
+			elif self.curr_domain == "noticiasaominuto.com":
+				close_cross = webdriver_.find_element(By.XPATH, '//span[@class="close"]')
+				close_cross.click()
+				privacy_policy = webdriver_.find_element(By.XPATH, '//button[contains(text(), "Não")]')
+				privacy_policy.click()
+				popup = webdriver_.find_element(By.XPATH, '//span[@class="pop-out-close"]')
+				popup.click()
+			elif self.curr_domain == "mobile01.com":
+				close_cross = webdriver_.find_elements(By.XPATH, '//button[@title="Close"]')
+				for ele in close_cross:
+					ele.click()
+				prompt = webdriver_.find_element(By.XPATH, '//button[@title="Close"]')
+				prompt.click()
+			elif self.curr_domain == "accuweather.com":
+				understand = webdriver_.find_element(By.XPATH, '//div[contains(text(), "I Understand")]')
+				understand.click()
+			elif self.curr_domain in ["accuweather.com", "blic.rs"]:
+				understand = webdriver_.find_element(By.XPATH, '//span[contains(text(), "U redu")]') # //div[contains(text(), "X")]
+				understand.click()
+			elif self.curr_domain == "rtl.fr":
+				more_options = webdriver_.find_element(By.XPATH, '//button/span[contains(text(), "Paramétrer mes choix")]')
+				more_options.click()
+				sleep(0.5)
+				accept_everything = webdriver_.find_element(By.XPATH, '//button/span[contains(text(), "Accepter tout")]')
+				accept_everything.click()
+				sleep(0.5)
+				save = webdriver_.find_element(By.XPATH, '//button/span[contains(text(), "Enregistrer")]')
+				save.click()
+			elif self.curr_domain == "extra.cz":
+				more_options = webdriver_.find_element(By.XPATH, '//button/span[contains(text(), "Podrobné nastavení")]')
+				more_options.click()
+				sleep(0.5)
+				accept_everything = webdriver_.find_element(By.XPATH, '//button/span[contains(text(), "Povolit vše")]')
+				accept_everything.click()
+				sleep(0.5)
+				save = webdriver_.find_element(By.XPATH, '//button/span[contains(text(), "Potvrdit moje volby")]')
+				save.click()
+			elif self.curr_domain == "lesechos.fr":
+				save = webdriver_.find_element(By.XPATH, '//button/span[contains(text(), "Agree and close")]')
+				save.click()
+			elif self.curr_domain == "thesimsresource.com":
+				accept = webdriver_.find_element(By.XPATH, '//div[contains(text(), "I accept")]')
+				accept.click()
+			elif self.curr_domain == "prosport.ro":
+				more_options = webdriver_.find_element(By.XPATH, '//font[contains(text(), "Manage options")]')
+				more_options.click()
+				accept_everything = webdriver_.find_elements(By.XPATH, '//font[contains(text(), "Accept all")]')
+				accept_everything[-1].click()
+			elif self.curr_domain == "cas.sk":
+				more_options = webdriver_.find_element(By.XPATH, '//button/span[contains(text(), "Spravovať možnosti")]')
+				more_options.click()
+				sleep(0.5)
+				accept_everything = webdriver_.find_element(By.XPATH, '//button/span[contains(text(), "Súhlasím so všetkým")]')
+				accept_everything.click()
+			elif self.curr_domain == "meteored.cl":
+				more_options = webdriver_.find_element(By.XPATH, '//button[contains(text(), "Configuración")]')
+				more_options.click()
+				sleep(0.5)
+				accept_everything = webdriver_.find_element(By.XPATH, '//button[contains(text(), "Aceptar todo y guardar")]')
+				accept_everything.click()
+			elif self.curr_domain == "belfasttelegraph.co.uk":
+				accept_everything = webdriver_.find_element(By.XPATH, '//button/span[contains(text(), "Accept")]')
+				accept_everything.click()
+			elif self.curr_domain == "wyborcza.pl":
+				accept_everything = webdriver_.find_element(By.XPATH, '//button[contains(text(), "AKCEPTUJĘ")]')
+				accept_everything.click()
+				close_cross = webdriver_.find_element(By.XPATH, '//a[@class="close"]')
+				close_cross.click()
 		except:
 			pass
-		consent_accept_options = ["Yes, I am an EU/EEA citizen", "Accept All Cookies", "Accept All", "Allow All", "Fine By Me", "Yes, I’m happy", "YES, I AGREE", "Yes, I agree", "Prosseguir", "I Accept", "Got it", "Agree and proceed", "AGREE", "Agree", "Accept", "ACCEPT", "Continue", "OK"]
+		consent_accept_options = ["Yes, I am an EU/EEA citizen", "Accept All Cookies", "Accept All", "Allow All", "Fine By Me", "Yes, I’m happy", "YES, I AGREE", "Yes, I agree", "Prosseguir", "I Accept", "Got it", "Agree and proceed", "AGREE", "Agree", "Accept", "ACCEPT", "Continue", "OK",
+			"LAIN KALI", "Nu, multumesc", "ACCEPT TOATE", "AKCEPTUJĘ", "Tidak", "Confirm My Choices", "Accepter et continuer"]
 		for opt in consent_accept_options:
 			try:
 				elements = webdriver_.find_elements(By.XPATH, '//button[contains(text(), "{}")]'.format(opt))
