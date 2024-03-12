@@ -14,7 +14,7 @@ class BidCollector():
 
 	def saveBids(self, bids, logger):
 		current_time = time.time()
-		with open(self.bid_output_filepath, 'w') as out_file:
+		with open(self.bid_output_filepath, 'a+') as out_file:
 			for item in bids:
 				out_file.write(json.dumps(item)) 
 				out_file.write('\n')
