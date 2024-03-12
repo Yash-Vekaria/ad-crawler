@@ -113,6 +113,7 @@ def getChromeOptionsObject():
 	chrome_options.add_argument("--disable-blink-features=AutomationControlled")
 	extension_dir = os.path.join(ROOT_DIRECTORY, "consent-extension", "Consent-O-Matic", "Extension")
 	chrome_options.add_argument('--load-extension={}'.format(extension_dir))
+	chrome_options.add_argument('user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
 	prefs = {
 		"translate_whitelists": {"lt": "en"},
 		"translate_whitelists": {"fr": "en"},
@@ -180,7 +181,7 @@ def killBrowsermobproxyInstances():
 
 
 # Function to perform bot mitigation techniques
-def perform_bot_mitigation(driver):
+def perform_bot_mitigation(driver, profile, hb_domain, hb_rank, experimental_path, iteration, logger):
 	
 	# Bot mitigation 1: Move mouse randomly around a number of times
 	print("Performing Bot Mitigation 1")
@@ -211,6 +212,12 @@ def perform_bot_mitigation(driver):
 			scroll_count += 1
 			if scroll_count > SCROLL_MAX:
 				break;
+			if scroll_count%5 == 0:
+				# Perform bid collection
+				bid_file_path = os.path.join(experimental_path, str(hb_domain)+"_"+str(iteration)+"_bids.json")
+				bid_object = BidCollector(profile, hb_domain, hb_rank, bid_file_path)
+				bid_object.collectBids(driver, logger)
+				print(scroll_count, "Bid data collected")
 			page_height = int(driver.execute_script('return Math.max( document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight );'))
 			try:
 				driver.execute_script("window.scrollTo(0, {});".format(i))
@@ -228,6 +235,12 @@ def perform_bot_mitigation(driver):
 			scroll_count += 1
 			if scroll_count > SCROLL_MAX:
 				break;
+			if scroll_count%5 == 0:
+				# Perform bid collection
+				bid_file_path = os.path.join(experimental_path, str(hb_domain)+"_"+str(iteration)+"_bids.json")
+				bid_object = BidCollector(profile, hb_domain, hb_rank, bid_file_path)
+				bid_object.collectBids(driver, logger)
+				print(scroll_count, "Bid data collected")
 			page_height = int(driver.execute_script('return Math.max( document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight );'))
 			try:
 				driver.execute_script("window.scrollTo(0, {});".format(i))
@@ -404,7 +417,7 @@ def main(args):
 			
 			logger.write("\nPopup-Consent-1 handled!")
 			# exploreFullPage(driver)
-			perform_bot_mitigation(driver)
+			perform_bot_mitigation(driver, profile, hb_domain, hb_rank, experimental_path, iteration, logger)
 			logger.write("\nWebpage explored fully.")
 			
 			consent_flag = threading.Event()
