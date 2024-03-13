@@ -111,10 +111,7 @@ def getChromeOptionsObject():
 	chrome_options.add_argument("--disable-popup-blocking")
 	chrome_options.add_argument("--ignore-certificate-errors")
 	chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-	# extension_dir = os.path.join(ROOT_DIRECTORY, "consent-extension", "Consent-O-Matic", "Extension")
-	extension_dir1 = os.path.join(ROOT_DIRECTORY, "consent-extension", "Consent-O-Matic", "Extension")
-	extension_dir2 = os.path.join(ROOT_DIRECTORY, "webdriver-spoofer-extension")
-	extension_dir = ','.join([extension_dir1, extension_dir2])
+	extension_dir = os.path.join(ROOT_DIRECTORY, "consent-extension", "Consent-O-Matic", "Extension")
 	chrome_options.add_argument('--load-extension={}'.format(extension_dir))
 	chrome_options.add_argument('user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
 	prefs = {
