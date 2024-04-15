@@ -69,7 +69,7 @@ def main():
     for file_ in os.listdir(crawl_dir):
         if file_ == "bids":
             continue
-        elif os.path.exists(os.path.join(crawl_dir, "bids", "{}_bids.json".format(file_))): # elif os.path.exists(os.path.join(crawl_dir, "bids", "{}_bids.csv".format(file_))):
+        elif os.path.exists(os.path.join(crawl_dir, "bids", "{}_bids.csv".format(file_))): # elif os.path.exists(os.path.join(crawl_dir, "bids", "{}_bids.csv".format(file_))):
             continue
         profile_to_analyse = file_
         bp = BidParser(profile_to_analyse)
