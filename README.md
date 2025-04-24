@@ -3,6 +3,18 @@ A repository to crawl the bids, advertisers, and ads on websites.
 
 <hr />
 
+If you find this helpful, please cite our paper:
+```
+@inproceedings{vekaria2024inventory,
+  title={The inventory is dark and full of misinformation: Understanding ad inventory pooling in the ad-tech supply chain},
+  author={Vekaria, Yash and Nithyanand, Rishab and Shafiq, Zubair},
+  booktitle={2024 IEEE Symposium on Security and Privacy (SP)},
+  pages={1590--1608},
+  year={2024},
+  organization={IEEE}
+}
+```
+
 ### Steps to setup Crawler
 
 
